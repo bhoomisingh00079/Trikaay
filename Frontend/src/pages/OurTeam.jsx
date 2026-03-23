@@ -1,5 +1,5 @@
+import Navbar from "../components/Navbar";
 import { Link } from "react-router-dom";
-import { FiChevronDown } from "react-icons/fi";
 import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
 import styles from "./OurTeam.module.css";
 
@@ -58,38 +58,7 @@ export default function OurTeam() {
 
   return (
     <div className={styles.pageWrapper}>
-      <header className={styles.header}>
-        <Link to="/" className={styles.logoLink}>
-          <span className={styles.logoMark}>TC</span>
-          <span className={styles.logoText}>Trikay Care and Creation Association</span>
-        </Link>
-
-        <nav className={styles.nav}>
-          <Link to="/" className={`${styles.navLink} ${styles.activePill}`}>
-            Home
-          </Link>
-
-          <div className={styles.dropdown}>
-            <button type="button" className={styles.navButton}>
-              Our Organization <FiChevronDown />
-            </button>
-            <div className={styles.dropdownMenu}>
-              <Link to="/about">About Us</Link>
-              <Link to="/our-team">Our Team</Link>
-            </div>
-          </div>
-
-          <Link to="/support" className={styles.navLink}>
-            Support Us
-          </Link>
-          <Link to="/blogs" className={styles.navLink}>
-            Blogs
-          </Link>
-          <Link to="/contact" className={styles.navLink}>
-            Contact Us
-          </Link>
-        </nav>
-      </header>
+      <Navbar />
 
       <section className={styles.banner}>
         <h1 className={styles.bannerTitle}>Our Team</h1>
