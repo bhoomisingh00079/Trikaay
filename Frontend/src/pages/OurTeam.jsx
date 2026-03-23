@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { FiChevronDown } from "react-icons/fi";
-import { MdEmail } from "react-icons/md";
-import { FaPhoneAlt, FaFacebookF, FaInstagram, FaYoutube } from "react-icons/fa";
+import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
 import styles from "./OurTeam.module.css";
 
 const teamMembers = [
@@ -128,71 +127,47 @@ export default function OurTeam() {
         </div>
       </section>
 
-      <footer className={styles.footer}>
-        <div className={styles.footerTop}>
-          <div>
-            <div className={styles.footerLogoWrap}>
-              <span className={styles.logoMark}>TC</span>
-              <p className={styles.footerBrandTitle}>Trikay Care and Creation Association</p>
-            </div>
+      <div className="info-section">
+        <div className="info-inner">
+          <div className="info-left">
+            <h2 className="logo">TCCA</h2>
 
-            <div className={styles.iconButtons}>
-              <a href="mailto:info@trikay.org" aria-label="Email">
-                <MdEmail />
-              </a>
-              <a href="tel:+919999999999" aria-label="Phone">
-                <FaPhoneAlt />
-              </a>
+            <div className="info-links">
+              <Link to="/">🏠 Home</Link>
+              <Link to="/about">📘 About Us</Link>
+              <Link to="/blogs">📰 Blogs</Link>
+              <Link to="/support">🤝 Become Volunteer</Link>
+              <Link to="/contact">📞 Contact Us</Link>
             </div>
           </div>
 
-          <div className={styles.footerColumn}>
-            <h3>Navigation</h3>
-            <Link to="/">Home</Link>
-            <Link to="/about">About Us</Link>
-            <Link to="/blogs">Blogs</Link>
-            <Link to="/support">Become Volunteer</Link>
-            <Link to="/contact">Contact Us</Link>
-          </div>
+          <div className="info-right">
+            <div className="timing">
+              <p>🕒 Monday to Friday: 10.00 a.m to 6.00 p.m</p>
+              <p>🚫 Sunday: Closed</p>
+            </div>
 
-          <div className={styles.footerColumn}>
-            <h3>Office Hours</h3>
-            <p>Monday to Friday 10:00 a.m to 6:00 p.m</p>
-            <p>Sunday Closed</p>
-          </div>
-
-          <div className={styles.footerColumn}>
-            <h3>Newsletter</h3>
-            <div className={styles.newsletter}>
-              <input type="email" placeholder="Your email" aria-label="Email address" />
-              <button type="button">Subscribe</button>
+            <div className="subscribe">
+              <input type="email" placeholder="Your email..." className="subscribe-input" />
+              <button className="home-btn">Subscribe</button>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className={styles.footerSocialRight}>
-          <div className={styles.socialIcons}>
-            <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook">
-              <FaFacebookF />
-            </a>
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram">
-              <FaInstagram />
-            </a>
-            <a href="https://youtube.com" target="_blank" rel="noreferrer" aria-label="YouTube">
-              <FaYoutube />
-            </a>
-          </div>
-        </div>
+      <div className="socials">
+        <a href="https://facebook.com" target="_blank" rel="noreferrer">
+          <FaFacebook />
+        </a>
+        <a href="https://instagram.com" target="_blank" rel="noreferrer">
+          <FaInstagram />
+        </a>
+        <a href="https://youtube.com" target="_blank" rel="noreferrer">
+          <FaYoutube />
+        </a>
+      </div>
 
-        <div className={styles.footerBottom}>
-          <p>Copyright @2023 Trikay. All Rights Reserved</p>
-          <div className={styles.bottomLinks}>
-            <Link to="/contact">Contact Us</Link>
-            <span>|</span>
-            <Link to="/support">Support</Link>
-          </div>
-        </div>
-      </footer>
+      <div className="footer">Copyright ©2023 Trikay | All Rights Reserved</div>
     </div>
   );
 }
