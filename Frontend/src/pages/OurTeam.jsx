@@ -1,34 +1,173 @@
-import Navbar from "../components/Navbar";
+import { Link } from "react-router-dom";
+import { FiChevronDown } from "react-icons/fi";
+import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
+import styles from "./OurTeam.module.css";
+
+const teamMembers = [
+  {
+    name: "Shilpa Bambarkar",
+    role: "Director",
+    image: "https://trikay.org/admin/upload/2110230607244.png",
+  },
+  {
+    name: "Mr. Jayesh Bambarkar",
+    role: "Director",
+    image: "https://trikay.org/admin/upload/301023033946Untitled%20design.png",
+  },
+  {
+    name: "Mr. Dinesh Mishra",
+    role: "Founder",
+    image: "https://trikay.org/admin/upload/2110230606323.png",
+  },
+  {
+    name: "Adv. Roshani Thakur",
+    role: "Legal Advisor",
+    image:
+      "https://trikay.org/admin/upload/2212230333068015bbcd-1f63-4025-9075-c60327f1b902.jpeg",
+  },
+  {
+    name: "Mrs. Snehal Jadhav",
+    role: "Counsellor",
+    image: "https://trikay.org/admin/upload/2110230606422.png",
+  },
+  {
+    name: "Mrs. Shweta Damle",
+    role: "Our Mentor",
+    image: "https://trikay.org/admin/upload/251023045307Untitled%20design%20(2).png",
+  },
+  {
+    name: "Mr. Santosh Shinde",
+    role: "Our Mentor",
+    image: "https://trikay.org/admin/upload/251023045319Untitled%20design%20(1).png",
+  },
+  {
+    name: "Porav Enterprises",
+    role: "Web Developer Partner",
+    image: "https://trikay.org/admin/upload/2110230606526.png",
+  },
+  {
+    name: "Professional Utilities Company",
+    role: "Legal & Compliance Partner",
+    image: "https://trikay.org/admin/upload/2110230616395.png",
+  },
+];
 
 export default function OurTeam() {
+  const firstRow = teamMembers.slice(0, 5);
+  const secondRow = teamMembers.slice(5);
+
   return (
-    <>
-      <Navbar />
+    <div className={styles.pageWrapper}>
+      <header className={styles.header}>
+        <Link to="/" className={styles.logoLink}>
+          <span className={styles.logoMark}>TC</span>
+          <span className={styles.logoText}>Trikay Care and Creation Association</span>
+        </Link>
 
-      <main className="org-page">
-        <section className="org-card">
-          <h1 className="org-title">Our Team</h1>
-          <p className="org-intro">
-            Meet the people who build and run our community programs.
-          </p>
+        <nav className={styles.nav}>
+          <Link to="/" className={`${styles.navLink} ${styles.activePill}`}>
+            Home
+          </Link>
 
-          <article className="org-tab-content" role="tabpanel">
-            <h2>People Behind The Mission</h2>
-            <p>
-              Our team combines social workers, educators, mentors, and field
-              coordinators who collaborate closely with local communities. We
-              believe trust and consistency are the foundation of every
-              successful grassroots initiative.
-            </p>
+          <div className={styles.dropdown}>
+            <button type="button" className={styles.navButton}>
+              Our Organization <FiChevronDown />
+            </button>
+            <div className={styles.dropdownMenu}>
+              <Link to="/about">About Us</Link>
+              <Link to="/our-team">Our Team</Link>
+            </div>
+          </div>
 
-            <ul>
-              <li>Experienced leadership with on-ground expertise</li>
-              <li>Skilled volunteers supporting education and outreach</li>
-              <li>Partnerships with local institutions for scale</li>
-            </ul>
-          </article>
-        </section>
-      </main>
-    </>
+          <Link to="/support" className={styles.navLink}>
+            Support Us
+          </Link>
+          <Link to="/blogs" className={styles.navLink}>
+            Blogs
+          </Link>
+          <Link to="/contact" className={styles.navLink}>
+            Contact Us
+          </Link>
+        </nav>
+      </header>
+
+      <section className={styles.banner}>
+        <h1 className={styles.bannerTitle}>Our Team</h1>
+      </section>
+
+      <section className={styles.teamSection}>
+        <div className={styles.teamGrid}>
+          {firstRow.map((member) => (
+            <article className={styles.card} key={member.name}>
+              <img
+                src={member.image}
+                alt={member.name}
+                className={styles.cardImage}
+                loading="lazy"
+              />
+              <h2 className={styles.cardName}>{member.name}</h2>
+              <p className={styles.cardRole}>{member.role}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className={styles.teamGrid}>
+          {secondRow.map((member) => (
+            <article className={styles.card} key={member.name}>
+              <img
+                src={member.image}
+                alt={member.name}
+                className={styles.cardImage}
+                loading="lazy"
+              />
+              <h2 className={styles.cardName}>{member.name}</h2>
+              <p className={styles.cardRole}>{member.role}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <div className="info-section">
+        <div className="info-inner">
+          <div className="info-left">
+            <h2 className="logo">TCCA</h2>
+
+            <div className="info-links">
+              <Link to="/">🏠 Home</Link>
+              <Link to="/about">📘 About Us</Link>
+              <Link to="/blogs">📰 Blogs</Link>
+              <Link to="/support">🤝 Become Volunteer</Link>
+              <Link to="/contact">📞 Contact Us</Link>
+            </div>
+          </div>
+
+          <div className="info-right">
+            <div className="timing">
+              <p>🕒 Monday to Friday: 10.00 a.m to 6.00 p.m</p>
+              <p>🚫 Sunday: Closed</p>
+            </div>
+
+            <div className="subscribe">
+              <input type="email" placeholder="Your email..." className="subscribe-input" />
+              <button className="home-btn">Subscribe</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="socials">
+        <a href="https://facebook.com" target="_blank" rel="noreferrer">
+          <FaFacebook />
+        </a>
+        <a href="https://instagram.com" target="_blank" rel="noreferrer">
+          <FaInstagram />
+        </a>
+        <a href="https://youtube.com" target="_blank" rel="noreferrer">
+          <FaYoutube />
+        </a>
+      </div>
+
+      <div className="footer">Copyright ©2023 Trikay | All Rights Reserved</div>
+    </div>
   );
 }
