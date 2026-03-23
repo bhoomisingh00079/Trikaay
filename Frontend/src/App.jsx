@@ -5,6 +5,7 @@ import About from "./pages/About";
 import OurTeam from "./pages/OurTeam";
 import BeneficiaryPortfolio from "./pages/BeneficiaryPortfolio";
 import Contact from "./pages/Contact";
+import Impact from "./pages/Impact";
 
 // Temporary pages (as per navbar links)
 function Support() {
@@ -30,6 +31,7 @@ function App() {
         <Route path="/support" element={<Support />} />
         <Route path="/blogs" element={<Blogs />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/impact" element={<Impact />} />
 
       </Routes>
     </BrowserRouter>

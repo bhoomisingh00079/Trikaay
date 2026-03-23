@@ -2,6 +2,18 @@ body {
   @apply text-lg;
 }
 
+.doc-card {
+  @apply bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition text-center;
+}
+
+.doc-card h2 {
+  @apply font-bold text-lg mb-2;
+}
+
+.doc-card p {
+  @apply text-gray-600 mb-4;
+}
+
 /* GLOBAL TEXT (exclude navbar + footer) */
 /* GLOBAL TEXT SCALE */
 .main-content {
