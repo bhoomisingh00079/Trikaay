@@ -6,13 +6,11 @@ export default function Contact() {
     <>
       <Navbar />
 
-      <div className="main-content">
-        <div className="section">
-          <div className="container">
-            <h1 className="text-center font-bold">Contact Us Page</h1>
-          </div>
-        </div>
-      </div>
+      <main className="px-6 py-16 text-lg leading-7">
+        <section className="mx-auto max-w-6xl">
+          <h1 className="text-center text-4xl font-bold text-slate-900">Contact Us Page</h1>
+        </section>
+      </main>
 
       <SiteFooter />
     </>

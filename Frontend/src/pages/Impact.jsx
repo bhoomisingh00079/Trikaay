@@ -35,32 +35,33 @@ export default function Impact() {
     <>
       <Navbar />
 
-      <div className="main-content">
-        <div className="section">
-          <div className="container">
-            <h1 className="text-center font-bold mb-10">
+      <main className="px-6 py-16 text-lg leading-7">
+        <section className="mx-auto max-w-6xl">
+          <h1 className="mb-10 text-center text-4xl font-bold text-slate-900">
               Impact Reports & CSR Documents
-            </h1>
+          </h1>
 
-            <div className="grid md:grid-cols-3 gap-6">
-              {documents.map((doc, index) => (
-                <div className="doc-card" key={index}>
-                  <h2>{doc.name}</h2>
+          <div className="grid gap-6 md:grid-cols-3">
+            {documents.map((doc) => (
+              <div
+                className="rounded-xl bg-white p-6 text-center shadow-md transition hover:shadow-xl"
+                key={doc.file}
+              >
+                <h2 className="mb-2 text-lg font-bold text-slate-900">{doc.name}</h2>
 
-                  <a
-                    href={`/docs/${encodeURIComponent(doc.file)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="home-btn"
-                  >
-                    View
-                  </a>
-                </div>
-              ))}
-            </div>
+                <a
+                  href={`/docs/${encodeURIComponent(doc.file)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-block rounded-full bg-blue-600 px-6 py-2 font-medium text-white transition hover:scale-105 hover:bg-blue-700 hover:shadow-lg"
+                >
+                  View
+                </a>
+              </div>
+            ))}
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
 
       <SiteFooter />
     </>
