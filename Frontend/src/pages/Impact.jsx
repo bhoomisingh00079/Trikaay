@@ -60,6 +60,9 @@ export default function Impact() {
           </div>
         </div>
       </div>
+
+      {/* FOOTER */}
+      <div className="footer">Copyright ©2023 Trikay | All Rights Reserved</div>
     </>
   );
 }
