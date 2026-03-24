@@ -1,4 +1,5 @@
 import Navbar from "../components/Navbar";
+import SiteFooter from "../components/SiteFooter";
 
 export default function BeneficiaryPortfolio() {
   return (
@@ -29,6 +30,8 @@ export default function BeneficiaryPortfolio() {
           </article>
         </section>
       </main>
+
+      <SiteFooter />
     </>
   );
 }

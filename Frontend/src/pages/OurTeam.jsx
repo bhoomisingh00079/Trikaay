@@ -1,7 +1,5 @@
 import Navbar from "../components/Navbar";
-import { Link } from "react-router-dom";
-import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
-import styles from "./OurTeam.module.css";
+import SiteFooter from "../components/SiteFooter";
 
 const teamMembers = [
   {
@@ -56,87 +54,70 @@ export default function OurTeam() {
   const firstRow = teamMembers.slice(0, 5);
   const secondRow = teamMembers.slice(5);
 
+  const cardClasses =
+    "group relative w-[160px] cursor-pointer overflow-hidden rounded-2xl border border-[#6b3fa040] bg-[#fab7ff] p-3 text-center shadow-[0_4px_15px_rgba(107,63,160,0.12)] transition-all duration-300 hover:-translate-y-2 hover:scale-[1.03] hover:border-[#6b3fa0] hover:shadow-[0_12px_30px_rgba(107,63,160,0.25)] sm:w-[130px] min-[481px]:w-[160px] max-[480px]:w-[110px]";
+
+  const cardImageClasses =
+    "mb-2.5 aspect-square w-full rounded-[10px] object-cover shadow-[0_4px_12px_rgba(107,63,160,0.16)] transition-all duration-300 group-hover:-translate-y-[1px] group-hover:shadow-[0_8px_18px_rgba(107,63,160,0.24)] group-hover:outline group-hover:outline-3 group-hover:outline-[#9b59b6] group-hover:outline-offset-3";
+
   return (
-    <div className={styles.pageWrapper}>
+    <>
       <Navbar />
 
-      <section className={styles.banner}>
-        <h1 className={styles.bannerTitle}>Our Team</h1>
+      <div className="bg-[#faf7fe] font-sans">
+
+      <section className="bg-gradient-to-br from-[#6b3fa0] to-[#9b59b6] px-12 py-8 shadow-[0_4px_12px_rgba(107,63,160,0.3)] max-[480px]:p-5">
+        <h1 className="m-0 text-[1.8rem] font-bold text-[#e9c4ff] max-[768px]:text-[1.4rem]">
+          Our Team
+        </h1>
       </section>
 
-      <section className={styles.teamSection}>
-        <div className={styles.teamGrid}>
+      <section className="mx-auto max-w-[1100px] px-5 py-10">
+        <div className="relative flex flex-wrap justify-center gap-6 rounded-[18px] bg-gradient-to-b from-[rgba(255,255,255,0.72)] to-[rgba(243,238,251,0.78)] px-2 py-2.5 max-[768px]:gap-4">
+          <div className="pointer-events-none absolute inset-[-1px] rounded-[18px] shadow-[inset_0_0_0_1px_rgba(107,63,160,0.06)]" />
           {firstRow.map((member) => (
-            <article className={styles.card} key={member.name}>
+            <article className={cardClasses} key={member.name}>
+              <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-br from-[#6b3fa0] to-[#9b59b6]" />
               <img
                 src={member.image}
                 alt={member.name}
-                className={styles.cardImage}
+                className={cardImageClasses}
                 loading="lazy"
               />
-              <h2 className={styles.cardName}>{member.name}</h2>
-              <p className={styles.cardRole}>{member.role}</p>
+              <h2 className="mb-1.5 text-[0.82rem] font-bold leading-[1.3] text-[#2d2d2d] max-[480px]:text-[0.7rem]">
+                {member.name}
+              </h2>
+              <p className="m-0 text-[0.74rem] font-medium tracking-[0.3px] text-[#9b59b6] max-[480px]:text-[0.65rem]">
+                {member.role}
+              </p>
             </article>
           ))}
         </div>
 
-        <div className={styles.teamGrid}>
+        <div className="relative mt-7 flex flex-wrap justify-center gap-6 rounded-[18px] bg-gradient-to-b from-[rgba(255,255,255,0.72)] to-[rgba(243,238,251,0.78)] px-2 py-2.5 max-[768px]:gap-4">
+          <div className="pointer-events-none absolute inset-[-1px] rounded-[18px] shadow-[inset_0_0_0_1px_rgba(107,63,160,0.06)]" />
           {secondRow.map((member) => (
-            <article className={styles.card} key={member.name}>
+            <article className={cardClasses} key={member.name}>
+              <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-br from-[#6b3fa0] to-[#9b59b6]" />
               <img
                 src={member.image}
                 alt={member.name}
-                className={styles.cardImage}
+                className={cardImageClasses}
                 loading="lazy"
               />
-              <h2 className={styles.cardName}>{member.name}</h2>
-              <p className={styles.cardRole}>{member.role}</p>
+              <h2 className="mb-1.5 text-[0.82rem] font-bold leading-[1.3] text-[#2d2d2d] max-[480px]:text-[0.7rem]">
+                {member.name}
+              </h2>
+              <p className="m-0 text-[0.74rem] font-medium tracking-[0.3px] text-[#9b59b6] max-[480px]:text-[0.65rem]">
+                {member.role}
+              </p>
             </article>
           ))}
         </div>
       </section>
 
-      <div className="info-section">
-        <div className="info-inner">
-          <div className="info-left">
-            <h2 className="logo">TCCA</h2>
-
-            <div className="info-links">
-              <Link to="/">🏠 Home</Link>
-              <Link to="/about">📘 About Us</Link>
-              <Link to="/blogs">📰 Blogs</Link>
-              <Link to="/support">🤝 Become Volunteer</Link>
-              <Link to="/contact">📞 Contact Us</Link>
-            </div>
-          </div>
-
-          <div className="info-right">
-            <div className="timing">
-              <p>🕒 Monday to Friday: 10.00 a.m to 6.00 p.m</p>
-              <p>🚫 Sunday: Closed</p>
-            </div>
-
-            <div className="subscribe">
-              <input type="email" placeholder="Your email..." className="subscribe-input" />
-              <button className="home-btn">Subscribe</button>
-            </div>
-          </div>
-        </div>
+      <SiteFooter showVolunteer />
       </div>
-
-      <div className="socials">
-        <a href="https://facebook.com" target="_blank" rel="noreferrer">
-          <FaFacebook />
-        </a>
-        <a href="https://instagram.com" target="_blank" rel="noreferrer">
-          <FaInstagram />
-        </a>
-        <a href="https://youtube.com" target="_blank" rel="noreferrer">
-          <FaYoutube />
-        </a>
-      </div>
-
-      <div className="footer">Copyright ©2023 Trikay | All Rights Reserved</div>
-    </div>
+    </>
   );
 }

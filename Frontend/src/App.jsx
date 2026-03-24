@@ -6,14 +6,40 @@ import OurTeam from "./pages/OurTeam";
 import BeneficiaryPortfolio from "./pages/BeneficiaryPortfolio";
 import Contact from "./pages/Contact";
 import Impact from "./pages/Impact";
+import Navbar from "./components/Navbar";
+import SiteFooter from "./components/SiteFooter";
 
 // Temporary pages (as per navbar links)
 function Support() {
-  return <h1>Support Us Page</h1>;
+  return (
+    <>
+      <Navbar />
+      <div className="main-content">
+        <div className="section">
+          <div className="container">
+            <h1 className="text-center font-bold">Support Us Page</h1>
+          </div>
+        </div>
+      </div>
+      <SiteFooter />
+    </>
+  );
 }
 
 function Blogs() {
-  return <h1>Blogs Page</h1>;
+  return (
+    <>
+      <Navbar />
+      <div className="main-content">
+        <div className="section">
+          <div className="container">
+            <h1 className="text-center font-bold">Blogs Page</h1>
+          </div>
+        </div>
+      </div>
+      <SiteFooter />
+    </>
+  );
 }
 
 function App() {

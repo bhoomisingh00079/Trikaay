@@ -1,4 +1,5 @@
 import Navbar from "../components/Navbar";
+import SiteFooter from "../components/SiteFooter";
 
 const documents = [
   { name: "80G Certificate", file: "80G.pdf" },
@@ -61,8 +62,7 @@ export default function Impact() {
         </div>
       </div>
 
-      {/* FOOTER */}
-      <div className="footer">Copyright ©2023 Trikay | All Rights Reserved</div>
+      <SiteFooter />
     </>
   );
 }
