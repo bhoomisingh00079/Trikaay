@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 export default function Navbar() {
   return (
-    <header className="sticky top-0 z-40 bg-violet-400 px-4 py-4 text-white shadow md:px-10">
+    <header className="sticky top-0 z-40 bg-gradient-to-br from-[#6b3fa0] to-[#9b59b6] px-4 py-4 text-white shadow md:px-10">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <h1 className="text-2xl font-bold leading-none">TCCA</h1>
 

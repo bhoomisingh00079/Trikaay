@@ -66,8 +66,8 @@ export default function OurTeam() {
 
       <div className="bg-[#faf7fe] font-sans">
 
-      <section className="bg-gradient-to-br from-[#6b3fa0] to-[#9b59b6] px-12 py-8 shadow-[0_4px_12px_rgba(107,63,160,0.3)] max-[480px]:p-5">
-        <h1 className="m-0 text-[1.8rem] font-bold text-[#e9c4ff] max-[768px]:text-[1.4rem]">
+      <section className="w-full bg-white">
+        <h1 className="border-b border-gray-300 px-5 py-4 text-[1.8rem] font-bold text-gray-800">
           Our Team
         </h1>
       </section>
