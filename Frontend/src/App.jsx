@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import OurTeam from "./pages/OurTeam";
+import WhatWeDo from "./pages/WhatWeDo";
 import BeneficiaryPortfolio from "./pages/BeneficiaryPortfolio";
 import Contact from "./pages/Contact";
 import Impact from "./pages/Impact";
@@ -49,6 +50,7 @@ function App() {
         {/* Navbar Pages */}
         <Route path="/about" element={<About />} />
         <Route path="/our-team" element={<OurTeam />} />
+        <Route path="/what-we-do" element={<WhatWeDo />} />
         <Route path="/beneficiary-portfolio" element={<BeneficiaryPortfolio />} />
         <Route path="/support" element={<Support />} />
         <Route path="/blogs" element={<Blogs />} />

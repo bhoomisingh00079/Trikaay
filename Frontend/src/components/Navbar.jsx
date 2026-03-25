@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 export default function Navbar() {
   return (
@@ -7,52 +7,94 @@ export default function Navbar() {
         <h1 className="text-2xl font-bold leading-none">TCCA</h1>
 
         <nav className="flex flex-wrap items-center gap-3 text-sm md:gap-5 md:text-base">
-          <Link
+          <NavLink
             to="/"
-            className="rounded-full bg-blue-600 px-5 py-2 font-medium text-white transition hover:bg-blue-700"
+            end
+            className={({ isActive }) =>
+              isActive
+                ? "rounded-full bg-blue-700 px-5 py-2 font-medium text-white transition"
+                : "rounded-full px-5 py-2 font-medium text-white transition hover:bg-blue-700"
+            }
           >
             Home
-          </Link>
+          </NavLink>
 
           <div className="group relative">
-            <Link to="/about" className="font-medium hover:text-violet-100">
+            <NavLink
+              to="/about"
+              className={({ isActive }) =>
+                isActive
+                  ? "rounded-full bg-blue-700 px-5 py-2 font-medium text-white transition"
+                  : "rounded-full px-5 py-2 font-medium text-white transition hover:bg-blue-700"
+              }
+            >
               Our Organization
-            </Link>
+            </NavLink>
 
             <div className="invisible absolute left-0 top-full z-50 mt-2 w-56 rounded-xl bg-white p-2 opacity-0 shadow-[0_12px_24px_rgba(15,23,42,0.14)] transition-all duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-              <Link
+              <NavLink
                 to="/about"
-                className="block rounded-lg px-3 py-2 text-sm font-medium text-blue-900 hover:bg-blue-50 hover:text-blue-700"
+                className={({ isActive }) =>
+                  isActive
+                    ? "block rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700"
+                    : "block rounded-lg px-3 py-2 text-sm font-medium text-blue-900 hover:bg-blue-50 hover:text-blue-700"
+                }
               >
                 About Organization
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 to="/our-team"
-                className="block rounded-lg px-3 py-2 text-sm font-medium text-blue-900 hover:bg-blue-50 hover:text-blue-700"
+                className={({ isActive }) =>
+                  isActive
+                    ? "block rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700"
+                    : "block rounded-lg px-3 py-2 text-sm font-medium text-blue-900 hover:bg-blue-50 hover:text-blue-700"
+                }
               >
                 Our Team
-              </Link>
-              <Link
-                to="/beneficiary-portfolio"
-                className="block rounded-lg px-3 py-2 text-sm font-medium text-blue-900 hover:bg-blue-50 hover:text-blue-700"
+              </NavLink>
+              <NavLink
+                to="/what-we-do"
+                className={({ isActive }) =>
+                  isActive
+                    ? "block rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700"
+                    : "block rounded-lg px-3 py-2 text-sm font-medium text-blue-900 hover:bg-blue-50 hover:text-blue-700"
+                }
               >
-                Beneficiary Portfolio
-              </Link>
+                What We Do
+              </NavLink>
             </div>
           </div>
 
-          <Link to="/support" className="font-medium hover:text-violet-100">
+          <NavLink
+            to="/support"
+            className={({ isActive }) =>
+              isActive
+                ? "rounded-full bg-blue-700 px-5 py-2 font-medium text-white transition"
+                : "rounded-full px-5 py-2 font-medium text-white transition hover:bg-blue-700"
+            }
+          >
             Support Us
-          </Link>
-          <Link to="/blogs" className="font-medium hover:text-violet-100">
-            Blogs
-          </Link>
-          <Link to="/contact" className="font-medium hover:text-violet-100">
+          </NavLink>
+          <NavLink
+            to="/contact"
+            className={({ isActive }) =>
+              isActive
+                ? "rounded-full bg-blue-700 px-5 py-2 font-medium text-white transition"
+                : "rounded-full px-5 py-2 font-medium text-white transition hover:bg-blue-700"
+            }
+          >
             Contact Us
-          </Link>
-          <Link to="/impact" className="font-medium hover:text-violet-100">
+          </NavLink>
+          <NavLink
+            to="/impact"
+            className={({ isActive }) =>
+              isActive
+                ? "rounded-full bg-blue-700 px-5 py-2 font-medium text-white transition"
+                : "rounded-full px-5 py-2 font-medium text-white transition hover:bg-blue-700"
+            }
+          >
             Impact Report
-          </Link>
+          </NavLink>
         </nav>
       </div>
     </header>
