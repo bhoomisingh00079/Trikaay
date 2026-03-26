@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 export default function CommentForm() {
+  const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
   const [formData, setFormData] = useState({
     name: '',
     text: '',
@@ -27,7 +28,7 @@ export default function CommentForm() {
     setErrorMessage('');
 
     try {
-      const apiUrl = 'http://localhost:5001/api/comments';
+      const apiUrl = `${API_URL}/comments`;
       console.log('📤 Sending comment to:', apiUrl);
       
       const response = await fetch(apiUrl, {

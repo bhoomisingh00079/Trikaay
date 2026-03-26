@@ -64,7 +64,7 @@ export default function OurTeam() {
     <>
       <Navbar />
 
-      <div className="bg-[#faf7fe] font-sans">
+      <div className="support-bg font-sans">
 
       <section className="w-full bg-white">
         <h1 className="border-b border-gray-300 px-5 py-4 text-[1.8rem] font-bold text-gray-800">

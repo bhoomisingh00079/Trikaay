@@ -248,7 +248,7 @@ export default function Home() {
           <h2 className="text-2xl font-semibold">
             Compassion in Action:{" "}
             <span className="font-medium text-green-700">
-              Changing Lives Every Day! ✨
+              Changing Lives Every Day! 
             </span>
           </h2>
 

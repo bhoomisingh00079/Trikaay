@@ -12,6 +12,7 @@ const cors = require('cors');
 const contactRouter = require('./routes/contact');
 const subscribeRouter = require('./routes/subscribe');
 const commentsRouter = require('./routes/comments');
+const donateRouter = require('./routes/donate');
 
 // Import utility modules for volunteer feature
 const googleSheets = require('./utils/googleSheets');
@@ -23,7 +24,6 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
@@ -88,6 +88,7 @@ function validateVolunteerData(data) {
 app.use('/api/contact', contactRouter);
 app.use('/api/subscribe', subscribeRouter);
 app.use('/api/comments', commentsRouter);
+app.use('/api/donate', donateRouter);
 
 /**
  * ROUTES - Volunteer Registration

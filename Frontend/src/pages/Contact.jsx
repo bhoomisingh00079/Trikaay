@@ -34,7 +34,7 @@ export default function Contact() {
     <>
       <Navbar />
 
-      <main className="bg-white px-6 py-16 text-slate-800">
+      <main className="support-bg px-6 py-16 text-slate-800">
         <section className="mx-auto max-w-6xl space-y-10">
           <div className="text-center">
             <h1 className="text-4xl font-bold">Contact Us</h1>
