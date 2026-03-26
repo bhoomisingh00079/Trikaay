@@ -108,7 +108,7 @@ export default function Contact() {
         </section>
       </main>
 
-      <SiteFooter showVolunteer={true} />
+      <SiteFooter  />
     </>
   );
 }

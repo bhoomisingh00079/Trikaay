@@ -51,17 +51,15 @@ export default function About() {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-[#f3f3f3]">
-        <section className="w-full bg-white">
-          <h1 className="border-b border-gray-300 px-5 py-4 text-[1.8rem] font-bold text-gray-800">
-            About Us
-          </h1>
+      <main className="min-h-screen bg-green-50">
+        <section className="mx-auto w-full max-w-6xl px-5 py-14">
+          <h1 className="text-5xl font-bold text-slate-900">About Us</h1>
 
-          <section className="grid min-h-[118px] grid-cols-[180px_1fr] border-b border-gray-400 max-md:grid-cols-1">
+          <section className="mt-10 grid min-h-[118px] grid-cols-[180px_1fr] overflow-hidden rounded-t-xl border border-gray-300 max-md:grid-cols-1">
             <div className="grid place-content-center bg-[#e7e7e7] text-3xl font-medium text-gray-900">
               Vision
             </div>
-            <div className="grid place-content-center bg-[#f4f4f0] px-6 py-4 text-center text-[1.02rem] leading-[1.35] text-gray-800">
+            <div className="grid place-content-center bg-[#f4f4f0] px-6 py-4 text-center text-[1.05rem] leading-[1.45] text-gray-800">
               To empower every girl who transitions out of institutional care by
               ensuring her access to safety, dignity, and equal opportunities,
               enabling her to become a self-reliant, capable, and confident
@@ -69,8 +67,8 @@ export default function About() {
             </div>
           </section>
 
-          <section className="grid min-h-[118px] grid-cols-[1fr_180px] border-b border-gray-400 max-md:grid-cols-1">
-            <div className="grid place-content-center bg-[#f4f4f0] px-6 py-4 text-center text-[1.02rem] leading-[1.35] text-gray-800">
+          <section className="grid min-h-[118px] grid-cols-[1fr_180px] overflow-hidden rounded-b-xl border border-t-0 border-gray-300 max-md:grid-cols-1">
+            <div className="grid place-content-center bg-[#f4f4f0] px-6 py-4 text-center text-[1.05rem] leading-[1.45] text-gray-800">
               To create a safe, nurturing, and joyful space for orphaned,
               abandoned, exploited, and neglected girls transitioning out of
               institutional care at 18, empowering them to lead independent,
@@ -82,11 +80,11 @@ export default function About() {
             </div>
           </section>
 
-          <section className="bg-[#efefef] px-4 py-10">
+          <section className="mt-10 rounded-xl bg-[#efefef] px-4 py-12">
             <h2 className="mb-6 text-center text-5xl font-bold text-gray-900">Objectives</h2>
 
-            <div className="mx-auto hidden max-w-[760px] md:block">
-              <div className="relative mx-auto h-[720px] w-[720px]">
+            <div className="mx-auto hidden max-w-[820px] md:block">
+              <div className="relative mx-auto h-[760px] w-[760px]">
                 <svg
                   viewBox="0 0 100 100"
                   className="pointer-events-none absolute inset-0 h-full w-full"
