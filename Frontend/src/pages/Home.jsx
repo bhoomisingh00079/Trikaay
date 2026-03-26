@@ -71,9 +71,8 @@ export default function Home() {
     return () => observer.disconnect();
   }, []);
 
-  const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
   const buttonClasses =
-    "rounded-full bg-blue-600 px-6 py-2 font-medium text-white transition hover:scale-105 hover:shadow-lg";
+    "rounded-full bg-blue-600 px-6 py-2 font-medium text-white transition hover:scale-105 hover:bg-blue-700 hover:shadow-lg";
 
   const inputClasses = "w-full rounded border border-slate-300 p-3 text-base";
 
@@ -90,7 +89,7 @@ export default function Home() {
     setContactStatus({ type: '', message: '' });
 
     try {
-      const response = await fetch(`${API_URL}/contact`, {
+      const response = await fetch('http://localhost:5001/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(contactForm),
@@ -134,7 +133,7 @@ export default function Home() {
         </p>
       </section>
       <div className="text-lg leading-7">
-        <section className="mt-[-10px] grid gap-8 support-bg px-6 pb-10 pt-10 text-center md:grid-cols-3">
+        <section className="mt-[-10px] grid gap-8 bg-green-100 px-6 pb-10 pt-10 text-center md:grid-cols-3">
           <article className="flex flex-col items-center gap-3 rounded-xl bg-white p-6 shadow-md transition hover:shadow-xl">
             <img
               src={img1}
@@ -222,7 +221,7 @@ export default function Home() {
 
         <section
           ref={statsRef}
-          className="grid grid-cols-2 gap-6 support-bg py-12 text-center md:grid-cols-4"
+          className="grid grid-cols-2 gap-6 bg-purple-300 py-12 text-center md:grid-cols-4"
         >
           {statsData.map((item, index) => (
             <div key={item.label} className="flex flex-col items-center gap-2">
@@ -243,13 +242,13 @@ export default function Home() {
           ))}
         </section>
 
-        <section className="mt-[-20px] flex flex-col items-center gap-5 support-bg px-6 py-16 text-center">
+        <section className="mt-[-20px] flex flex-col items-center gap-5 bg-green-50 px-6 py-16 text-center">
           <h1 className="text-3xl font-bold">OUR SHARED MISSION</h1>
 
           <h2 className="text-2xl font-semibold">
             Compassion in Action:{" "}
             <span className="font-medium text-green-700">
-              Changing Lives Every Day! ✨
+              Changing Lives Every Day! 
             </span>
           </h2>
 
@@ -258,7 +257,7 @@ export default function Home() {
             let a single meal pass without sharing it in some way.”
           </p>
 
-          <button onClick={() => window.location.href = '/support'} className={buttonClasses}>Donate Now!</button>
+          <button className={buttonClasses}>Donate Now!</button>
         </section>
 
         <section className="grid gap-10 bg-white px-10 py-16 md:grid-cols-2">
