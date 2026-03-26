@@ -57,7 +57,14 @@ export default function SiteFooter({ showVolunteer = false }) {
       <section className="flex justify-center bg-violet-200 py-8">
         <div className="flex w-full max-w-4xl flex-col items-center justify-between gap-4 px-6 md:flex-row md:items-center">
           <div className="flex flex-col gap-3">
-            <h2 className="text-3xl font-bold text-slate-900">TCCA</h2>
+            <div className="flex items-center gap-2">
+              <img
+                src="/images/LOGO.jpeg"
+                alt="Trikay Care And Creation Association logo"
+                className="h-10 w-auto"
+              />
+              <span className="text-lg font-bold text-slate-900">Trikay Care And Creation Association</span>
+            </div>
             <div className="text-sm text-slate-800">
               <p>Monday-Friday: 10 AM - 6 PM</p>
               <p>Sunday: Closed</p>
