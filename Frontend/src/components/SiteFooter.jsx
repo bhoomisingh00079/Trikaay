@@ -47,9 +47,12 @@ export default function SiteFooter({ showVolunteer = false }) {
               <p className="mt-2 text-lg text-slate-800">Join our mission as a volunteer today</p>
             </div>
 
-            <button className="rounded-full bg-blue-600 px-6 py-3 text-lg font-medium text-white transition hover:scale-105 hover:bg-blue-700 hover:shadow-lg">
+            <Link
+              to="/volunteers"
+              className="rounded-full bg-blue-600 px-6 py-3 text-lg font-medium text-white transition hover:scale-105 hover:bg-blue-700 hover:shadow-lg"
+            >
               Become a Volunteer
-            </button>
+            </Link>
           </div>
         </section>
       )}

@@ -8,6 +8,7 @@ import WhatWeDo from "./pages/WhatWeDo";
 import BeneficiaryPortfolio from "./pages/BeneficiaryPortfolio";
 import Contact from "./pages/Contact";
 import Impact from "./pages/Impact";
+import Volunteers from "./pages/Volunteers";
 import Navbar from "./components/Navbar";
 import SiteFooter from "./components/SiteFooter";
 
@@ -66,6 +67,7 @@ function App() {
         <Route path="/beneficiary-portfolio" element={<BeneficiaryPortfolio />} />
         <Route path="/support" element={<Support />} />
         <Route path="/blogs" element={<Blogs />} />
+        <Route path="/volunteers" element={<Volunteers />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/impact" element={<Impact />} />
 

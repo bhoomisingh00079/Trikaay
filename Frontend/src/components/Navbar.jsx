@@ -76,6 +76,16 @@ export default function Navbar() {
             Support Us
           </NavLink>
           <NavLink
+            to="/volunteers"
+            className={({ isActive }) =>
+              isActive
+                ? "rounded-full bg-blue-700 px-5 py-2 font-medium text-white transition"
+                : "rounded-full px-5 py-2 font-medium text-white transition hover:bg-blue-700"
+            }
+          >
+            Volunteers
+          </NavLink>
+          <NavLink
             to="/contact"
             className={({ isActive }) =>
               isActive
