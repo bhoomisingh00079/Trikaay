@@ -4,6 +4,10 @@ import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
 export default function SiteFooter({ showVolunteer = false }) {
   const linkClasses = "text-base text-slate-800 transition hover:text-blue-600";
 
+  const handleScrollToTop = () => {
+    window.scrollTo(0, 0);
+  };
+
   return (
     <footer>
       {showVolunteer && (
@@ -23,42 +27,23 @@ export default function SiteFooter({ showVolunteer = false }) {
         </section>
       )}
 
-      <section className="flex justify-center bg-violet-200 py-12">
-        <div className="flex w-full max-w-4xl flex-col items-center justify-between gap-6 px-6 md:flex-row md:items-start">
-          <div className="flex flex-col gap-5">
-            <h2 className="text-4xl font-bold text-slate-900">TCCA</h2>
-
-            <div className="flex flex-wrap gap-4">
-              <Link to="/" className={linkClasses}>
-                🏠 Home
-              </Link>
-              <Link to="/about" className={linkClasses}>
-                📘 About Us
-              </Link>
-              <Link to="/blogs" className={linkClasses}>
-                📰 Blogs
-              </Link>
-              <Link to="/support" className={linkClasses}>
-                🤝 Become Volunteer
-              </Link>
-              <Link to="/contact" className={linkClasses}>
-                📞 Contact Us
-              </Link>
+      <section className="flex justify-center bg-violet-200 py-8">
+        <div className="flex w-full max-w-4xl flex-col items-center justify-between gap-4 px-6 md:flex-row md:items-center">
+          <div className="flex flex-col gap-3">
+            <h2 className="text-3xl font-bold text-slate-900">TCCA</h2>
+            <div className="text-sm text-slate-800">
+              <p>Monday-Friday: 10 AM - 6 PM</p>
+              <p>Sunday: Closed</p>
             </div>
           </div>
 
-          <div className="flex flex-col items-center gap-4 md:items-end">
-            <div className="text-center text-base text-slate-800 md:text-right">
-              <p className="whitespace-nowrap">🕒 Monday to Friday: 10.00 a.m to 6.00 p.m</p>
-              <p className="mt-1">🚫 Sunday: Closed</p>
-            </div>
-
+          <div className="flex flex-col items-center gap-2">
             <div className="flex items-center">
               <input
                 placeholder="Your email..."
-                className="rounded-l-md border border-slate-300 px-3 py-2 outline-none"
+                className="rounded-l-md border border-slate-300 px-3 py-2 text-sm outline-none"
               />
-              <button className="rounded-r-md bg-blue-600 px-5 py-2 text-white transition hover:bg-blue-700">
+              <button className="rounded-r-md bg-blue-600 px-4 py-2 text-sm text-white transition hover:bg-blue-700">
                 Subscribe
               </button>
             </div>
@@ -66,9 +51,9 @@ export default function SiteFooter({ showVolunteer = false }) {
         </div>
       </section>
 
-      <div className="flex w-full items-center justify-center gap-6 border-t border-purple-300 bg-violet-200 px-4 py-6 text-3xl">
+      <div className="flex w-full items-center justify-center gap-6 border-t border-purple-300 bg-violet-200 px-4 py-3 text-2xl">
         <a
-          href="https://facebook.com"
+          href=""
           target="_blank"
           rel="noreferrer"
           className="transition duration-300 hover:scale-110 hover:text-blue-700"
@@ -76,7 +61,7 @@ export default function SiteFooter({ showVolunteer = false }) {
           <FaFacebook />
         </a>
         <a
-          href="https://instagram.com"
+          href=""
           target="_blank"
           rel="noreferrer"
           className="transition duration-300 hover:scale-110 hover:text-blue-700"
@@ -84,7 +69,7 @@ export default function SiteFooter({ showVolunteer = false }) {
           <FaInstagram />
         </a>
         <a
-          href="https://youtube.com"
+          href=""
           target="_blank"
           rel="noreferrer"
           className="transition duration-300 hover:scale-110 hover:text-blue-700"
@@ -93,8 +78,8 @@ export default function SiteFooter({ showVolunteer = false }) {
         </a>
       </div>
 
-      <div className="bg-black py-4 text-center text-white">
-        Copyright ©2023 Trikay | All Rights Reserved
+      <div className="bg-black py-3 text-center text-sm text-white">
+        Copyright ©2026 Trikay | All Rights Reserved
       </div>
     </footer>
   );
