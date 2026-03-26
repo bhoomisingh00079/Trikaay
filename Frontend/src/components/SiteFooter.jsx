@@ -16,7 +16,7 @@ export default function SiteFooter({ showVolunteer = false }) {
     setSubscribeStatus({ type: '', message: '' });
 
     try {
-      const response = await fetch('http://localhost:5000/api/subscribe', {
+      const response = await fetch('http://localhost:5001/api/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: subscribeEmail }),
