@@ -1,10 +1,17 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 export default function Navbar() {
   return (
     <header className="sticky top-0 z-[1001] bg-gradient-to-br from-[#6b3fa0] to-[#9b59b6] px-4 py-2 text-white shadow md:px-10">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <h1 className="text-2xl font-bold leading-none">TCCA</h1>
+        <Link to="/" className="flex items-center gap-2">
+          <img
+            src="/images/LOGO.jpeg"
+            alt="Trikay Care And Creation Association logo"
+            className="h-10 w-auto" 
+          />
+          <span className="sr-only">Trikay Care And Creation Association</span>
+        </Link>
 
         <nav className="flex flex-wrap items-center gap-3 text-sm md:gap-5 md:text-base">
           <NavLink
