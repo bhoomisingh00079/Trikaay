@@ -16,7 +16,8 @@ export default function SiteFooter({ showVolunteer = false }) {
     setSubscribeStatus({ type: '', message: '' });
 
     try {
-      const response = await fetch('http://localhost:5000/api/subscribe', {
+      const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+      const response = await fetch(`${API_URL}/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: subscribeEmail }),

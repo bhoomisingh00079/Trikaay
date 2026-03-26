@@ -51,7 +51,7 @@ export default function About() {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-green-50">
+      <main className="min-h-screen support-bg">
         <section className="mx-auto w-full max-w-6xl px-5 py-14">
           <h1 className="text-5xl font-bold text-slate-900">About Us</h1>
 

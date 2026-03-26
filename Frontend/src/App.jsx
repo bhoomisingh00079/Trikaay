@@ -6,6 +6,7 @@ import About from "./pages/About";
 import OurTeam from "./pages/OurTeam";
 import WhatWeDo from "./pages/WhatWeDo";
 import BeneficiaryPortfolio from "./pages/BeneficiaryPortfolio";
+import SupportUs from "./pages/SupportUs";
 import Contact from "./pages/Contact";
 import Impact from "./pages/Impact";
 import Navbar from "./components/Navbar";
@@ -22,20 +23,6 @@ function ScrollToTop() {
 }
 
 // Temporary pages (as per navbar links)
-function Support() {
-  return (
-    <>
-      <Navbar />
-      <main className="px-6 py-16 text-lg leading-7">
-        <section className="mx-auto max-w-6xl">
-          <h1 className="text-center text-4xl font-bold text-slate-900">Support Us Page</h1>
-        </section>
-      </main>
-      <SiteFooter />
-    </>
-  );
-}
-
 function Blogs() {
   return (
     <>
@@ -64,7 +51,7 @@ function App() {
         <Route path="/our-team" element={<OurTeam />} />
         <Route path="/what-we-do" element={<WhatWeDo />} />
         <Route path="/beneficiary-portfolio" element={<BeneficiaryPortfolio />} />
-        <Route path="/support" element={<Support />} />
+        <Route path="/support" element={<SupportUs />} />
         <Route path="/blogs" element={<Blogs />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/impact" element={<Impact />} />

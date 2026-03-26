@@ -9,10 +9,12 @@ export default function WhatWeDo() {
   const [commentInputs, setCommentInputs] = useState({});
   const [comments, setComments] = useState({});
 
+  const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+
   useEffect(() => {
     const fetchComments = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/comments/approved');
+        const response = await fetch(`${API_URL}/comments/approved`);
         const data = await response.json();
         if (response.ok) {
           // Organize comments by projectId
@@ -56,7 +58,7 @@ export default function WhatWeDo() {
       console.log("📤 Sending comment to backend...");
       console.log("Request payload:", { name, text: commentText });
       
-      const response = await fetch('http://localhost:5001/api/comments', {
+      const response = await fetch(`${API_URL}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,7 +107,7 @@ export default function WhatWeDo() {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-[#f3f3f3]">
+      <main className="min-h-screen support-bg">
         {/* Projects Section */}
         <section className="px-4 py-12">
           <div className="mx-auto max-w-6xl">
@@ -171,7 +173,7 @@ export default function WhatWeDo() {
                             />
                             <button
                               type="submit"
-                              className="rounded-lg bg-[#6b3fa0] px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-[#5a2d8a] hover:shadow-md"
+                              className="rounded-lg bg-[#6b3fa0] px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:shadow-md"
                             >
                               Submit
                             </button>

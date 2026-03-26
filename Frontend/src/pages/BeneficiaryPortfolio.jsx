@@ -6,7 +6,7 @@ export default function BeneficiaryPortfolio() {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-gradient-to-b from-green-50 via-white to-cyan-50 px-4 py-10">
+      <main className="min-h-screen support-bg px-4 py-10">
         <section className="mx-auto max-w-5xl rounded-2xl border border-blue-100 bg-white p-6 shadow-lg md:p-10">
           <h1 className="text-3xl font-bold text-slate-900 md:text-4xl">Beneficiary Portfolio</h1>
           <p className="mt-2 text-base text-slate-700">

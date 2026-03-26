@@ -30,7 +30,7 @@ export default function Impact() {
     <>
       <Navbar />
 
-      <main className="px-6 py-16 text-lg">
+      <main className="support-bg px-6 py-16 text-lg">
         <section className="mx-auto max-w-6xl">
 
           <h1 className="mb-6 text-center text-4xl font-bold">
@@ -64,7 +64,7 @@ export default function Impact() {
                   href={`/docs/${encodeURIComponent(doc.file)}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-block rounded-full bg-blue-600 px-6 py-2 text-white transition hover:scale-105 hover:bg-blue-700"
+                  className="inline-block rounded-full bg-blue-600 px-6 py-2 text-white transition hover:scale-105 hover:shadow-lg"
                 >
                   View
                 </a>
