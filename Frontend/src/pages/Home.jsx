@@ -72,7 +72,7 @@ export default function Home() {
               <h2 className="mt-1 text-lg font-medium text-gray-600">We are work in India</h2>
             </div>
 
-            <button className={buttonClasses}>Read More</button>
+          
           </div>
 
           <p className="mt-4 text-base leading-relaxed text-gray-700">
