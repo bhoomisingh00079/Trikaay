@@ -17,6 +17,13 @@ export default function Home() {
   const hasAnimatedRef = useRef(false);
   const [counters, setCounters] = useState(statsData.map(() => 0));
   const [isCounting, setIsCounting] = useState(false);
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    subject: '',
+  });
+  const [contactStatus, setContactStatus] = useState({ type: '', message: '' });
 
   useEffect(() => {
     const section = statsRef.current;
@@ -68,6 +75,38 @@ export default function Home() {
     "rounded-full bg-blue-600 px-6 py-2 font-medium text-white transition hover:scale-105 hover:bg-blue-700 hover:shadow-lg";
 
   const inputClasses = "w-full rounded border border-slate-300 p-3 text-base";
+
+  const handleContactChange = (e) => {
+    const { name, value } = e.target;
+    setContactForm(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    setContactStatus({ type: '', message: '' });
+
+    try {
+      const response = await fetch('http://localhost:5000/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(contactForm),
+      });
+
+      if (response.ok) {
+        setContactStatus({ type: 'success', message: 'Thank you! Your message has been sent.' });
+        setContactForm({ name: '', phone: '', email: '', subject: '' });
+      } else {
+        const error = await response.json();
+        setContactStatus({ type: 'error', message: error.error || 'Failed to send message' });
+      }
+    } catch (error) {
+      setContactStatus({ type: 'error', message: 'Network error. Please try again.' });
+      console.error('Contact form error:', error);
+    }
+  };
 
   return (
     <>
@@ -225,12 +264,56 @@ export default function Home() {
           <div className="flex flex-col gap-4">
             <h2 className="mb-2 text-2xl font-bold">Get In Touch Now!</h2>
 
-            <input placeholder="Your Name..." className={inputClasses} />
-            <input placeholder="Your Phone No..." className={inputClasses} />
-            <input placeholder="Your Email..." className={inputClasses} />
-            <input placeholder="Subject..." className={inputClasses} />
+            <form onSubmit={handleContactSubmit} className="flex flex-col gap-4">
+              <input
+                type="text"
+                name="name"
+                placeholder="Your Name..."
+                value={contactForm.name}
+                onChange={handleContactChange}
+                className={inputClasses}
+                required
+              />
+              <input
+                type="tel"
+                name="phone"
+                placeholder="Your Phone No..."
+                value={contactForm.phone}
+                onChange={handleContactChange}
+                className={inputClasses}
+                required
+              />
+              <input
+                type="email"
+                name="email"
+                placeholder="Your Email..."
+                value={contactForm.email}
+                onChange={handleContactChange}
+                className={inputClasses}
+                required
+              />
+              <input
+                type="text"
+                name="subject"
+                placeholder="Subject..."
+                value={contactForm.subject}
+                onChange={handleContactChange}
+                className={inputClasses}
+                required
+              />
 
-            <button className={buttonClasses}>Submit</button>
+              <button type="submit" className={buttonClasses}>Submit</button>
+
+              {contactStatus.message && (
+                <div className={`rounded p-3 text-sm font-medium ${
+                  contactStatus.type === 'success'
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {contactStatus.message}
+                </div>
+              )}
+            </form>
           </div>
 
           <div className="flex flex-col justify-center gap-3 rounded-lg bg-gray-100 p-6">
