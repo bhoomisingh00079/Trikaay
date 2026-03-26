@@ -1,12 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import SiteFooter from "../components/SiteFooter";
+import ApprovedComments from "../components/ApprovedComments";
 import projects from "../data/projects";
 
 export default function WhatWeDo() {
   const [expandedIds, setExpandedIds] = useState([]);
-  const [comments, setComments] = useState({});
   const [commentInputs, setCommentInputs] = useState({});
+  const [comments, setComments] = useState({});
+
+  useEffect(() => {
+    const fetchComments = async () => {
+      try {
+        const response = await fetch('http://localhost:5001/api/comments/approved');
+        const data = await response.json();
+        if (response.ok) {
+          // Organize comments by projectId
+          const commentsByProject = {};
+          (data.data || []).forEach(comment => {
+            if (!commentsByProject[comment.projectId]) {
+              commentsByProject[comment.projectId] = [];
+            }
+            commentsByProject[comment.projectId].push(comment);
+          });
+          setComments(commentsByProject);
+        }
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+      }
+    };
+
+    fetchComments();
+
+    // Poll every 3 seconds
+    const intervalId = setInterval(fetchComments, 3000);
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   const toggleProject = (projectId) => {
     setExpandedIds(prev =>
@@ -16,26 +46,47 @@ export default function WhatWeDo() {
     );
   };
 
-  const handleCommentSubmit = (e, projectId) => {
+  const handleCommentSubmit = async (e, projectId) => {
     e.preventDefault();
+    const name = "Anonymous";
     const commentText = commentInputs[projectId]?.trim();
     if (!commentText) return;
 
-    const newComment = {
-      id: Date.now(),
-      text: commentText,
-      timestamp: new Date().toLocaleString(),
-    };
+    try {
+      console.log("📤 Sending comment to backend...");
+      console.log("Request payload:", { name, text: commentText });
+      
+      const response = await fetch('http://localhost:5001/api/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name,
+          text: commentText,
+          projectId,
+        }),
+      });
 
-    setComments(prev => ({
-      ...prev,
-      [projectId]: [...(prev[projectId] || []), newComment],
-    }));
+      const data = await response.json();
 
-    setCommentInputs(prev => ({
-      ...prev,
-      [projectId]: '',
-    }));
+      if (!response.ok) {
+        console.error('❌ API Error:', response.status, data.error);
+        throw new Error(data.error || 'Failed to submit comment');
+      }
+
+      console.log('✅ Comment submitted successfully:', data);
+      alert('Comment submitted for approval');
+
+      // Clear input field
+      setCommentInputs(prev => ({
+        ...prev,
+        [projectId]: '',
+      }));
+    } catch (error) {
+      console.error('❌ Error submitting comment:', error);
+      alert('Failed to submit comment: ' + error.message);
+    }
   };
 
   const handleCommentChange = (projectId, value) => {
@@ -46,10 +97,8 @@ export default function WhatWeDo() {
   };
 
   const handleCommentDelete = (projectId, commentId) => {
-    setComments(prev => ({
-      ...prev,
-      [projectId]: prev[projectId].filter(comment => comment.id !== commentId),
-    }));
+    // Comments are managed by backend - cannot delete from frontend
+    console.log('Info: Comments are managed by backend and cannot be deleted from frontend');
   };
 
   return (
@@ -129,39 +178,8 @@ export default function WhatWeDo() {
                           </div>
                         </form>
 
-                        {/* Comments List */}
-                        {comments[project.id] && comments[project.id].length > 0 && (
-                          <div className="space-y-3">
-                            {comments[project.id].map((comment) => (
-                              <div
-                                key={comment.id}
-                                className="relative rounded-lg bg-gray-50 p-3 text-sm"
-                              >
-                                <button
-                                  onClick={() => handleCommentDelete(project.id, comment.id)}
-                                  className="absolute right-2 top-2 text-red-500 hover:text-red-700 transition-colors duration-200"
-                                  title="Delete comment"
-                                >
-                                  <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                    />
-                                  </svg>
-                                </button>
-                                <p className="pr-8 text-gray-800">{comment.text}</p>
-                                <p className="mt-1 pr-8 text-xs text-gray-500">{comment.timestamp}</p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                        {/* Approved comments rendered by shared component */}
+                        <ApprovedComments projectId={project.id} comments={comments} />
                       </div>
                     </div>
                   </article>
