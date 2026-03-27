@@ -30,10 +30,10 @@ export default function Impact() {
     <>
       <Navbar />
 
-      <main className="support-bg px-6 py-16 text-lg">
+      <main className="support-bg px-6 py-16 text-lg text-brand-primary">
         <section className="mx-auto max-w-6xl">
 
-          <h1 className="mb-6 text-center text-4xl font-bold">
+          <h1 className="heading-page mb-6 text-center">
             Impact Reports & CSR Documents
           </h1>
 
@@ -58,13 +58,13 @@ export default function Impact() {
                 key={doc.file}
                 className="rounded-xl bg-white p-6 text-center shadow-md transition hover:shadow-xl"
               >
-                <h2 className="mb-3 font-bold">{doc.name}</h2>
+                <h2 className="mb-3 font-bold text-brand-heading">{doc.name}</h2>
 
                 <a
                   href={`/docs/${encodeURIComponent(doc.file)}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-block rounded-full bg-blue-600 px-6 py-2 text-white transition hover:scale-105 hover:shadow-lg"
+                  className="inline-block rounded-full bg-blue-600 px-6 py-2 text-brand-inverse transition hover:scale-105 hover:shadow-lg"
                 >
                   View
                 </a>

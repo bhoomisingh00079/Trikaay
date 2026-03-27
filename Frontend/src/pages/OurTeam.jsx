@@ -67,7 +67,7 @@ export default function OurTeam() {
       <div className="support-bg font-sans">
 
       <section className="w-full bg-white">
-        <h1 className="border-b border-gray-300 px-5 py-4 text-[1.8rem] font-bold text-gray-800">
+        <h1 className="border-b border-gray-300 px-5 py-4 text-[1.8rem] font-bold text-brand-heading">
           Our Team
         </h1>
       </section>
@@ -84,10 +84,10 @@ export default function OurTeam() {
                 className={cardImageClasses}
                 loading="lazy"
               />
-              <h2 className="mb-1.5 text-[0.82rem] font-bold leading-[1.3] text-[#2d2d2d] max-[480px]:text-[0.7rem]">
+              <h2 className="mb-1.5 text-[0.82rem] font-bold leading-[1.3] text-brand-heading max-[480px]:text-[0.7rem]">
                 {member.name}
               </h2>
-              <p className="m-0 text-[0.74rem] font-medium tracking-[0.3px] text-[#9b59b6] max-[480px]:text-[0.65rem]">
+              <p className="m-0 text-[0.74rem] font-medium tracking-[0.3px] text-brand-purple max-[480px]:text-[0.65rem]">
                 {member.role}
               </p>
             </article>
@@ -105,10 +105,10 @@ export default function OurTeam() {
                 className={cardImageClasses}
                 loading="lazy"
               />
-              <h2 className="mb-1.5 text-[0.82rem] font-bold leading-[1.3] text-[#2d2d2d] max-[480px]:text-[0.7rem]">
+              <h2 className="mb-1.5 text-[0.82rem] font-bold leading-[1.3] text-brand-heading max-[480px]:text-[0.7rem]">
                 {member.name}
               </h2>
-              <p className="m-0 text-[0.74rem] font-medium tracking-[0.3px] text-[#9b59b6] max-[480px]:text-[0.65rem]">
+              <p className="m-0 text-[0.74rem] font-medium tracking-[0.3px] text-brand-purple max-[480px]:text-[0.65rem]">
                 {member.role}
               </p>
             </article>

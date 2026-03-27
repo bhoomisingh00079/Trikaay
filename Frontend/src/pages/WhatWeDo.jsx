@@ -111,7 +111,7 @@ export default function WhatWeDo() {
         {/* Projects Section */}
         <section className="px-4 py-12">
           <div className="mx-auto max-w-6xl">
-            <h2 className="mb-8 text-center text-3xl font-bold text-gray-900">
+            <h2 className="heading-section mb-8 text-center">
               Our Projects
             </h2>
 
@@ -134,32 +134,32 @@ export default function WhatWeDo() {
                     </div>
 
                     <div className="p-6">
-                      <h3 className="mb-1 text-xl font-bold text-gray-900">
+                      <h3 className="mb-1 text-xl font-bold text-brand-heading">
                         {project.title}
                       </h3>
-                      <h4 className="mb-4 text-lg font-medium text-[#6b3fa0]">
+                      <h4 className="mb-4 text-lg font-medium text-brand-purple">
                         {project.marathiTitle}
                       </h4>
 
                       <div className="mb-4 space-y-2">
-                        <p className="text-sm leading-[1.5] text-gray-700">
+                        <p className="text-sm leading-[1.5] text-brand-secondary">
                           {isExpanded ? project.fullDescriptionEn : project.shortDescriptionEn}
                         </p>
-                        <p className="text-sm leading-[1.5] text-gray-600">
+                        <p className="text-sm leading-[1.5] text-brand-muted">
                           {isExpanded ? project.fullDescriptionMr : project.shortDescriptionMr}
                         </p>
                       </div>
 
                       <button
                         onClick={() => toggleProject(project.id)}
-                        className="rounded-lg bg-gradient-to-r from-[#6b3fa0] to-[#9b59b6] px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:shadow-lg hover:scale-105"
+                        className="rounded-lg bg-gradient-to-r from-[#6b3fa0] to-[#9b59b6] px-4 py-2 text-sm font-medium text-brand-inverse transition-all duration-200 hover:shadow-lg hover:scale-105"
                       >
                         {isExpanded ? "Show Less" : "Read More"}
                       </button>
 
                       {/* Comments Section */}
                       <div className="mt-6 border-t border-gray-200 pt-4">
-                        <h5 className="mb-3 text-sm font-semibold text-gray-800">Comments</h5>
+                        <h5 className="mb-3 text-sm font-semibold text-brand-primary">Comments</h5>
 
                         {/* Comment Form */}
                         <form onSubmit={(e) => handleCommentSubmit(e, project.id)} className="mb-4">
@@ -169,11 +169,11 @@ export default function WhatWeDo() {
                               value={commentInputs[project.id] || ''}
                               onChange={(e) => handleCommentChange(project.id, e.target.value)}
                               placeholder="Share your feedback or suggestions..."
-                              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#6b3fa0] focus:outline-none focus:ring-1 focus:ring-[#6b3fa0]"
+                              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-brand-primary focus:border-[#6b3fa0] focus:outline-none focus:ring-1 focus:ring-[#6b3fa0]"
                             />
                             <button
                               type="submit"
-                              className="rounded-lg bg-[#6b3fa0] px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:shadow-md"
+                              className="rounded-lg bg-[#6b3fa0] px-4 py-2 text-sm font-medium text-brand-inverse transition-all duration-200 hover:shadow-md"
                             >
                               Submit
                             </button>
