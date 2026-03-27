@@ -38,9 +38,7 @@ export default function Home() {
       const step = (currentTime) => {
         const progress = Math.min((currentTime - startTime) / duration, 1);
 
-        setCounters(
-          statsData.map((item) => Math.floor(item.value * progress))
-        );
+        setCounters(statsData.map((item) => Math.floor(item.value * progress)));
 
         if (progress < 1) {
           requestAnimationFrame(step);
@@ -63,7 +61,7 @@ export default function Home() {
           }
         });
       },
-      { threshold: 0.35 }
+      { threshold: 0.35 },
     );
 
     observer.observe(section);
@@ -88,14 +86,11 @@ export default function Home() {
     setContactStatus({ type: "", message: "" });
 
     try {
-      const response = await fetch(
-        "http://localhost:5001/api/contact",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(contactForm),
-        }
-      );
+      const response = await fetch("http://localhost:5001/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(contactForm),
+      });
 
       if (response.ok) {
         setContactStatus({
@@ -139,30 +134,50 @@ export default function Home() {
         <p className="mt-4 text-lg leading-relaxed text-gray-700">
           Trikay Care & Creation Association is a non-profit organization
           dedicated to providing aftercare services to girls aged 18 to 25 in
-          Raigad district, Maharashtra...
+          Raigad district, Maharashtra. With a strong commitment to empowering
+          and supporting these young women, Trikay Care & Creation Association
+          aims to address the unique challenges they face in their transition
+          into adulthood. This article explores the importance of aftercare for
+          girls in Raigad district, the specific challenges they encounter, and
+          the various services and support provided by Trikay Care & Creation
+          Association.
         </p>
-
         <div className="text-lg leading-7">
           {/* Cards */}
           <section className="mt-[-10px] grid gap-8 px-6 pb-10 pt-10 text-center md:grid-cols-3">
             <article className="flex flex-col items-center gap-3 rounded-xl bg-white p-6 shadow-md">
-              <img src={img1} className="h-64 w-48 rounded-xl" />
+              <img src={img1} alt="Education support" className="h-64 w-48 rounded-xl object-cover shadow-md transition duration-300 hover:scale-105" />
               <p>
                 <b>Dreams Without Limits —</b>
+                <br />
+                Supporting the next generation of female leaders and innovators
+                through education.
               </p>
             </article>
 
             <article className="flex flex-col items-center gap-3 rounded-xl bg-white p-6 shadow-md">
-              <img src={img2} className="h-64 w-48 rounded-xl" />
+              <img src={img2} alt="Direct impact support" className="h-64 w-48 rounded-xl object-cover shadow-md transition duration-300 hover:scale-105" />
               <p>
                 <b>Direct Impact Support —</b>
+                <br />
+                Transparency is our priority:
+                <br />
+                every rupee donated goes
+                <br />
+                straight to community upliftment and essential resources.
               </p>
             </article>
 
             <article className="flex flex-col items-center gap-3 rounded-xl bg-white p-6 shadow-md">
-              <img src={img3} className="h-64 w-48 rounded-xl" />
+              <img src={img3} alt="Social transformation" className="h-64 w-48 rounded-xl object-cover shadow-md transition duration-300 hover:scale-105" />
               <p>
                 <b>Social Transformation —</b>
+                <br />
+                Showcasing the measurable progress
+                <br />
+                of our initiatives in creating a more
+                <br />
+                equitable society for all.
               </p>
             </article>
           </section>
@@ -170,12 +185,26 @@ export default function Home() {
           {/* Stats */}
           <section
             ref={statsRef}
-            className="grid grid-cols-2 gap-6 bg-purple-300 py-12 text-center md:grid-cols-4"
+            className="grid grid-cols-2 gap-6 bg-purple-300 py-2 text-center md:grid-cols-4"
           >
             {statsData.map((item, index) => (
-              <div key={item.label}>
-                <h2>{counters[index]}</h2>
-                <p>{item.label}</p>
+              <div
+                key={item.label}
+                className="flex flex-col items-center gap-2"
+              >
+                <span className="text-4xl">{item.icon}</span>
+                <h2 className="text-black">
+                  <span
+                    data-animation-duration="2000"
+                    data-value={item.value}
+                    className={`inline-block min-w-[4ch] text-5xl font-extrabold leading-none transition-all duration-300 ${
+                      isCounting ? "scale-110" : "scale-100"
+                    }`}
+                  >
+                    {counters[index]}
+                  </span>
+                </h2>
+                <p className="text-base text-black">{item.label}</p>
               </div>
             ))}
           </section>
@@ -184,7 +213,10 @@ export default function Home() {
           <section className="grid gap-10 px-10 py-16 md:grid-cols-2">
             <div className="flex flex-col gap-4">
               <h2 className="mb-2 text-2xl font-bold">Get In Touch Now!</h2>
-              <form onSubmit={handleContactSubmit} className="flex flex-col gap-4">
+              <form
+                onSubmit={handleContactSubmit}
+                className="flex flex-col gap-4"
+              >
                 <input
                   type="text"
                   name="name"
@@ -221,13 +253,17 @@ export default function Home() {
                   className={inputClasses}
                   required
                 />
-                <button type="submit" className={buttonClasses}>Submit</button>
+                <button type="submit" className={buttonClasses}>
+                  Submit
+                </button>
                 {contactStatus.message && (
-                  <div className={`rounded p-3 text-sm font-medium ${
-                    contactStatus.type === 'success'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
+                  <div
+                    className={`rounded p-3 text-sm font-medium ${
+                      contactStatus.type === "success"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
                     {contactStatus.message}
                   </div>
                 )}
@@ -237,9 +273,9 @@ export default function Home() {
             <div className="flex flex-col justify-center gap-3 rounded-lg bg-gray-100 p-6">
               <h2 className="mb-2 text-2xl font-bold">Client Testimonials</h2>
               <p className="text-base italic text-gray-700">
-                “This NGO is a true force for positive change. Their dedication to
-                making a difference in the world is really inspiring. Support their
-                impactful work today!”
+                “This NGO is a true force for positive change. Their dedication
+                to making a difference in the world is really inspiring. Support
+                their impactful work today!”
               </p>
               <p className="mt-2 font-semibold text-gray-900">Pritam Singh</p>
               <p className="text-base text-gray-500">- Mumbai</p>
@@ -249,13 +285,21 @@ export default function Home() {
           <section className="mt-[-20px] flex flex-col items-center gap-5 px-6 py-16 text-center">
             <h1 className="text-3xl font-bold">OUR SHARED MISSION</h1>
             <h2 className="text-2xl font-semibold">
-              Compassion in Action: <span className="font-medium text-green-700">Changing Lives Every Day!</span>
+              Compassion in Action:{" "}
+              <span className="font-medium text-green-700">
+                Changing Lives Every Day!
+              </span>
             </h2>
             <p className="mt-2 max-w-2xl text-base leading-relaxed text-gray-700">
               "If you knew what I know about the power of giving, you would not
               let a single meal pass without sharing it in some way."
             </p>
-            <button onClick={() => window.location.href = '/support'} className={buttonClasses}>Donate Now!</button>
+            <button
+              onClick={() => (window.location.href = "/support")}
+              className={buttonClasses}
+            >
+              Donate Now!
+            </button>
           </section>
         </div>
       </main>

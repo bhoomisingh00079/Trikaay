@@ -101,47 +101,47 @@ export default function About() {
                 </svg>
 
                 <div className="absolute left-[65px] top-[65px] flex h-40 w-40 flex-col items-center justify-center rounded-[2.9rem] border-2 border-[#2a1d33] bg-[#8b5aa8] p-4 text-center text-white shadow">
-                  <span className="mb-2 text-5xl">{objectiveItems[0].icon}</span>
-                  <p className="text-[1.03rem] leading-tight">{objectiveItems[0].title}</p>
+                  <span className="mb-2 text-5xl text-white">{objectiveItems[0].icon}</span>
+                  <p className="text-[1.03rem] leading-tight text-white">{objectiveItems[0].title}</p>
                 </div>
 
                 <div className="absolute left-1/2 top-[40px] flex h-40 w-40 -translate-x-1/2 flex-col items-center justify-center rounded-[2.9rem] border-2 border-[#2a1d33] bg-[#8b5aa8] p-4 text-center text-white shadow">
-                  <span className="mb-2 text-5xl">{objectiveItems[1].icon}</span>
-                  <p className="text-[1.03rem] leading-tight">{objectiveItems[1].title}</p>
+                  <span className="mb-2 text-5xl text-white">{objectiveItems[1].icon}</span>
+                  <p className="text-[1.03rem] leading-tight text-white">{objectiveItems[1].title}</p>
                 </div>
 
                 <div className="absolute right-[65px] top-[65px] flex h-40 w-40 flex-col items-center justify-center rounded-[2.9rem] border-2 border-[#2a1d33] bg-[#8b5aa8] p-4 text-center text-white shadow">
-                  <span className="mb-2 text-5xl">{objectiveItems[2].icon}</span>
-                  <p className="text-[1.03rem] leading-tight">{objectiveItems[2].title}</p>
+                  <span className="mb-2 text-5xl text-white">{objectiveItems[2].icon}</span>
+                  <p className="text-[1.03rem] leading-tight text-white">{objectiveItems[2].title}</p>
                 </div>
 
                 <div className="absolute left-[40px] top-1/2 flex h-40 w-40 -translate-y-1/2 flex-col items-center justify-center rounded-[2.9rem] border-2 border-[#2a1d33] bg-[#8b5aa8] p-4 text-center text-white shadow">
-                  <span className="mb-2 text-5xl">{objectiveItems[3].icon}</span>
-                  <p className="text-[1.03rem] leading-tight">{objectiveItems[3].title}</p>
+                  <span className="mb-2 text-5xl text-white">{objectiveItems[3].icon}</span>
+                  <p className="text-[1.03rem] leading-tight text-white">{objectiveItems[3].title}</p>
                 </div>
 
                 <div className="absolute right-[40px] top-1/2 flex h-40 w-40 -translate-y-1/2 flex-col items-center justify-center rounded-[2.9rem] border-2 border-[#2a1d33] bg-[#8b5aa8] p-4 text-center text-white shadow">
-                  <span className="mb-2 text-5xl">{objectiveItems[4].icon}</span>
-                  <p className="text-[1.03rem] leading-tight">{objectiveItems[4].title}</p>
+                  <span className="mb-2 text-5xl text-white">{objectiveItems[4].icon}</span>
+                  <p className="text-[1.03rem] leading-tight text-white">{objectiveItems[4].title}</p>
                 </div>
 
                 <div className="absolute bottom-[65px] left-[65px] flex h-40 w-40 flex-col items-center justify-center rounded-[2.9rem] border-2 border-[#2a1d33] bg-[#8b5aa8] p-4 text-center text-white shadow">
-                  <span className="mb-2 text-5xl">{objectiveItems[5].icon}</span>
-                  <p className="text-[1.03rem] leading-tight">{objectiveItems[5].title}</p>
+                  <span className="mb-2 text-5xl text-white">{objectiveItems[5].icon}</span>
+                  <p className="text-[1.03rem] leading-tight text-white">{objectiveItems[5].title}</p>
                 </div>
 
                 <div className="absolute bottom-[40px] left-1/2 flex h-40 w-40 -translate-x-1/2 flex-col items-center justify-center rounded-[2.9rem] border-2 border-[#2a1d33] bg-[#8b5aa8] p-4 text-center text-white shadow">
-                  <span className="mb-2 text-5xl">{objectiveItems[6].icon}</span>
-                  <p className="text-[1.03rem] leading-tight">{objectiveItems[6].title}</p>
+                  <span className="mb-2 text-5xl text-white">{objectiveItems[6].icon}</span>
+                  <p className="text-[1.03rem] leading-tight text-white">{objectiveItems[6].title}</p>
                 </div>
 
                 <div className="absolute bottom-[65px] right-[65px] flex h-40 w-40 flex-col items-center justify-center rounded-[2.9rem] border-2 border-[#2a1d33] bg-[#8b5aa8] p-4 text-center text-white shadow">
-                  <span className="mb-2 text-5xl">{objectiveItems[7].icon}</span>
-                  <p className="text-[1.03rem] leading-tight">{objectiveItems[7].title}</p>
+                  <span className="mb-2 text-5xl text-white">{objectiveItems[7].icon}</span>
+                  <p className="text-[1.03rem] leading-tight text-white">{objectiveItems[7].title}</p>
                 </div>
 
                 <div className="absolute left-1/2 top-1/2 flex h-52 w-52 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border-2 border-[#5a2a7a] bg-[#8b5aa8] p-5 text-center text-white shadow">
-                  <p className="text-[1.85rem] leading-[1.1]">
+                  <p className="text-[1.85rem] leading-[1.1] text-white">
                     Holistic
                     <br />
                     Development
