@@ -1,6 +1,6 @@
 node_modules/
 .env
-backend/config/googleAuth.json
+/config/googleAuth.json
 certId.json
 certificates/
 Frontend/*.backup.*
