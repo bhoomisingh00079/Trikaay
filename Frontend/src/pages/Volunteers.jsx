@@ -10,11 +10,11 @@ export default function Volunteers() {
       <main className="px-6 py-16 bg-slate-50">
         <section className="mx-auto max-w-5xl rounded-3xl border border-slate-200 bg-white p-8 sm:p-10 shadow-lg">
 
-          <h1 className="text-center text-4xl font-bold text-slate-900">
+          <h1 className="heading-page text-center">
             Volunteers
           </h1>
 
-          <p className="mt-6 text-center text-lg text-slate-600 max-w-2xl mx-auto">
+          <p className="subtitle-copy mx-auto mt-6 max-w-2xl text-center">
             Thank you for your interest in volunteering with us. Fill the form below to get started.
           </p>
 

@@ -34,17 +34,17 @@ export default function Contact() {
     <>
       <Navbar />
 
-      <main className="support-bg px-6 py-16 text-slate-800">
+      <main className="support-bg px-6 py-16 text-brand-primary">
         <section className="mx-auto max-w-6xl space-y-10">
           <div className="text-center">
-            <h1 className="text-4xl font-bold">Contact Us</h1>
-            <p className="mt-2 text-gray-600">Your request is received. Reach our office locations, phone, and email directly.</p>
+            <h1 className="heading-page">Contact Us</h1>
+            <p className="caption-copy mt-2">Your request is received. Reach our office locations, phone, and email directly.</p>
           </div>
 
           <div className="grid gap-8 lg:grid-cols-2">
             <div className="space-y-6 rounded-xl border border-slate-200 bg-slate-50 p-7 shadow-sm">
               <div>
-                <h2 className="text-2xl font-bold">Main Address</h2>
+                <h2 className="text-2xl font-bold text-brand-heading">Main Address</h2>
                 <p className="mt-2 text-lg font-semibold">Registered Office - A-00</p>
                 <p>Bhuvaneshwar Plaza</p>
                 <p>Shree Samarth Nagar, Bhuvaneshwar, Tal.Roha</p>
@@ -52,14 +52,14 @@ export default function Contact() {
               </div>
 
               <div>
-                <h2 className="text-2xl font-bold">Swapnalaya Address</h2>
+                <h2 className="text-2xl font-bold text-brand-heading">Swapnalaya Address</h2>
                 <p className="mt-2">102, First Floor, National Galaxy</p>
                 <p>Opposite Moraj Auto Stop on Takka Road, Takka Gaon</p>
                 <p>Old Panvel, Navi Mumbai - 410206</p>
               </div>
 
               <div>
-                <h2 className="text-2xl font-bold">Swayamsiddha Address</h2>
+                <h2 className="text-2xl font-bold text-brand-heading">Swayamsiddha Address</h2>
                 <p className="mt-2">Sector 18, New Panvel, Raigad</p>
                 <p>402109, Maharashtra</p>
               </div>
@@ -81,7 +81,7 @@ export default function Contact() {
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
-              <h2 className="mb-4 text-2xl font-bold">Location Map (Swapnalaya)</h2>
+              <h2 className="mb-4 text-2xl font-bold text-brand-heading">Location Map (Swapnalaya)</h2>
               <div className="h-[360px] w-full overflow-hidden rounded-xl">
                 <MapContainer center={[swapnalayaLocation.lat, swapnalayaLocation.lng]} zoom={swapnalayaLocation.zoom} style={{ height: '100%', width: '100%' }}>
                   <TileLayer
@@ -102,8 +102,8 @@ export default function Contact() {
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-slate-100 p-5 text-center">
-            <h3 className="text-xl font-bold">Social</h3>
-            <p className="mt-2 text-gray-600">Facebook / Instagram / YouTube / LinkedIn links are pending, as requested.</p>
+            <h3 className="text-xl font-bold text-brand-heading">Social</h3>
+            <p className="caption-copy mt-2">Facebook / Instagram / YouTube / LinkedIn links are pending, as requested.</p>
           </div>
         </section>
       </main>

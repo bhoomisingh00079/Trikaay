@@ -69,7 +69,7 @@ export default function Home() {
   }, []);
 
   const buttonClasses =
-    "rounded-full bg-blue-600 px-6 py-2 font-medium text-white transition hover:scale-105 hover:bg-blue-700 hover:shadow-lg";
+    "rounded-full bg-blue-600 px-6 py-2 font-medium text-brand-inverse transition hover:scale-105 hover:bg-blue-700 hover:shadow-lg";
 
   const inputClasses = "w-full rounded border border-slate-300 p-3 text-base";
 
@@ -123,15 +123,15 @@ export default function Home() {
     <>
       <Navbar />
 
-      <main className="min-h-[calc(100vh-3.5rem)] support-bg px-4 py-8 text-black sm:px-6 lg:px-8">
+      <main className="min-h-[calc(100vh-3.5rem)] support-bg px-4 py-8 text-brand-primary sm:px-6 lg:px-8">
         {/* Intro */}
         <div className="mb-4">
-          <h1 className="text-5xl font-bold">
+          <h1 className="heading-display">
             Introduction to Trikay Care & Creation Association
           </h1>
         </div>
 
-        <p className="mt-4 text-lg leading-relaxed text-gray-700">
+        <p className="body-copy mt-4 text-lg">
           Trikay Care & Creation Association is a non-profit organization
           dedicated to providing aftercare services to girls aged 18 to 25 in
           Raigad district, Maharashtra. With a strong commitment to empowering
@@ -193,7 +193,7 @@ export default function Home() {
                 className="flex flex-col items-center gap-2"
               >
                 <span className="text-4xl">{item.icon}</span>
-                <h2 className="text-black">
+                <h2 className="text-brand-heading">
                   <span
                     data-animation-duration="2000"
                     data-value={item.value}
@@ -204,7 +204,7 @@ export default function Home() {
                     {counters[index]}
                   </span>
                 </h2>
-                <p className="text-base text-black">{item.label}</p>
+                <p className="text-base text-brand-primary">{item.label}</p>
               </div>
             ))}
           </section>
@@ -212,7 +212,7 @@ export default function Home() {
           {/* Contact */}
           <section className="grid gap-10 px-10 py-16 md:grid-cols-2">
             <div className="flex flex-col gap-4">
-              <h2 className="mb-2 text-2xl font-bold">Get In Touch Now!</h2>
+              <h2 className="mb-2 text-2xl font-bold text-brand-heading">Get In Touch Now!</h2>
               <form
                 onSubmit={handleContactSubmit}
                 className="flex flex-col gap-4"
@@ -271,26 +271,26 @@ export default function Home() {
             </div>
 
             <div className="flex flex-col justify-center gap-3 rounded-lg bg-gray-100 p-6">
-              <h2 className="mb-2 text-2xl font-bold">Client Testimonials</h2>
-              <p className="text-base italic text-gray-700">
+              <h2 className="mb-2 text-2xl font-bold text-brand-heading">Client Testimonials</h2>
+              <p className="text-base italic text-brand-secondary">
                 “This NGO is a true force for positive change. Their dedication
                 to making a difference in the world is really inspiring. Support
                 their impactful work today!”
               </p>
-              <p className="mt-2 font-semibold text-gray-900">Pritam Singh</p>
-              <p className="text-base text-gray-500">- Mumbai</p>
+              <p className="mt-2 font-semibold text-brand-heading">Pritam Singh</p>
+              <p className="text-base text-brand-muted">- Mumbai</p>
             </div>
           </section>
 
           <section className="mt-[-20px] flex flex-col items-center gap-5 px-6 py-16 text-center">
-            <h1 className="text-3xl font-bold">OUR SHARED MISSION</h1>
-            <h2 className="text-2xl font-semibold">
+            <h1 className="heading-section">OUR SHARED MISSION</h1>
+            <h2 className="text-2xl font-semibold text-brand-heading">
               Compassion in Action:{" "}
               <span className="font-medium text-green-700">
                 Changing Lives Every Day!
               </span>
             </h2>
-            <p className="mt-2 max-w-2xl text-base leading-relaxed text-gray-700">
+            <p className="body-copy mt-2 max-w-2xl">
               "If you knew what I know about the power of giving, you would not
               let a single meal pass without sharing it in some way."
             </p>
