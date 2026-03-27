@@ -50,9 +50,9 @@ function validateVolunteerData(data) {
         errors.push('Name must be at least 2 characters');
     }
 
-    // Phone validation
-    if (!data.phone || !/^[\d\s+\-()]+$/.test(data.phone) || data.phone.length < 10) {
-        errors.push('Phone must be a valid number with at least 10 digits');
+    // Phone validation - allow international format
+    if (!data.phone || data.phone.replace(/\D/g, '').length < 10) {
+        errors.push('Phone must contain at least 10 digits');
     }
 
     // Email validation

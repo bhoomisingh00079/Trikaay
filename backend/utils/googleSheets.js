@@ -10,6 +10,15 @@ const path = require('path');
 const sheets = google.sheets('v4');
 const drive = google.drive('v3');
 
+// Target Google Sheet tab name (space-safe quoted when needed)
+const SHEET_TAB = process.env.SHEET_TAB || process.env.SHEET_NAME || 'Volunteer Registrations';
+
+function getSheetRange(subRange) {
+    const needsQuotes = /\s|[^A-Za-z0-9_]/.test(SHEET_TAB);
+    const tabName = needsQuotes ? `'${SHEET_TAB.replace(/'/g, "\\'")}'` : SHEET_TAB;
+    return `${tabName}!${subRange}`;
+}
+
 // Service account credentials from environment
 let auth;
 
@@ -66,10 +75,13 @@ async function appendVolunteerToSheet(spreadsheetId, volunteerData) {
             values: values,
         };
 
+        const sheetRange = getSheetRange('A2');
+        console.log(`📝 Appending to sheet - Range: ${sheetRange}`);
+
         const response = await sheets.spreadsheets.values.append({
             auth: auth,
             spreadsheetId: spreadsheetId,
-            range: 'Sheet1!A2', // Append from row 2 (assuming row 1 is headers)
+            range: sheetRange,
             valueInputOption: 'RAW',
             resource: resource,
         });
@@ -78,6 +90,7 @@ async function appendVolunteerToSheet(spreadsheetId, volunteerData) {
         return response.data;
     } catch (error) {
         console.error('✗ Error appending to Google Sheets:', error.message);
+        console.error('   Full error:', error);
         throw error;
     }
 }
@@ -96,7 +109,7 @@ async function getAllRows(spreadsheetId) {
         const response = await sheets.spreadsheets.values.get({
             auth: auth,
             spreadsheetId: spreadsheetId,
-            range: 'Sheet1!A:I', // Get all rows and columns A-I
+            range: getSheetRange('A:J'), // Get all rows and columns A-J (including registration date)
         });
 
         const rows = response.data.values || [];
@@ -128,7 +141,7 @@ async function updateCell(spreadsheetId, rowIndex, colIndex, value) {
         const response = await sheets.spreadsheets.values.update({
             auth: auth,
             spreadsheetId: spreadsheetId,
-            range: `Sheet1!${cellAddress}`,
+            range: getSheetRange(cellAddress),
             valueInputOption: 'RAW',
             resource: {
                 values: [[value]],
@@ -156,7 +169,7 @@ async function getRow(spreadsheetId, rowNumber) {
         const response = await sheets.spreadsheets.values.get({
             auth: auth,
             spreadsheetId: spreadsheetId,
-            range: `Sheet1!A${rowNumber}:I${rowNumber}`,
+            range: getSheetRange(`A${rowNumber}:J${rowNumber}`),
         });
         return response.data.values?.[0] || [];
     } catch (error) {
