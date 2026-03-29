@@ -2,19 +2,36 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import SiteFooter from "../components/SiteFooter";
 import ApprovedComments from "../components/ApprovedComments";
-import projects from "../data/projects";
+import { apiUrl, normalizeAssetUrl } from "../utils/api";
 
 export default function WhatWeDo() {
+  const [projects, setProjects] = useState([]);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [expandedIds, setExpandedIds] = useState([]);
   const [commentInputs, setCommentInputs] = useState({});
   const [comments, setComments] = useState({});
 
-  const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
-
   useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch(apiUrl('/api/projects'));
+        const data = await response.json();
+        if (response.ok) {
+          setProjects(Array.isArray(data) ? data : []);
+        } else {
+          setProjects([]);
+        }
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+        setProjects([]);
+      } finally {
+        setIsLoadingProjects(false);
+      }
+    };
+
     const fetchComments = async () => {
       try {
-        const response = await fetch(`${API_URL}/comments/approved`);
+        const response = await fetch(apiUrl('/api/comments/approved'));
         const data = await response.json();
         if (response.ok) {
           // Organize comments by projectId
@@ -32,6 +49,7 @@ export default function WhatWeDo() {
       }
     };
 
+    fetchProjects();
     fetchComments();
 
     // Poll every 3 seconds
@@ -58,7 +76,7 @@ export default function WhatWeDo() {
       console.log("📤 Sending comment to backend...");
       console.log("Request payload:", { name, text: commentText });
       
-      const response = await fetch(`${API_URL}/comments`, {
+      const response = await fetch(apiUrl('/api/comments'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -115,19 +133,31 @@ export default function WhatWeDo() {
               Our Projects
             </h2>
 
+            {isLoadingProjects ? (
+              <p className="text-center text-brand-secondary">Loading projects...</p>
+            ) : null}
+
             <div className="grid gap-6 md:grid-cols-2">
               {projects.map((project) => {
-                const isExpanded = expandedIds.includes(project.id);
+                const projectId = project._id || project.id;
+                const isExpanded = expandedIds.includes(projectId);
+                const title = project.title || "Project";
+                const subtitle = project.marathiTitle || "";
+                const shortDescription = project.shortDescriptionEn || project.description || "";
+                const fullDescription = project.fullDescriptionEn || project.description || "";
+                const shortDescriptionMr = project.shortDescriptionMr || "";
+                const fullDescriptionMr = project.fullDescriptionMr || "";
+                const image = normalizeAssetUrl(project.images?.[0] || project.image || "");
 
                 return (
                   <article
-                    key={project.id}
+                    key={projectId}
                     className="group overflow-hidden rounded-2xl bg-white shadow-[0_4px_15px_rgba(107,63,160,0.08)] transition-all duration-300 hover:shadow-[0_12px_30px_rgba(107,63,160,0.18)] hover:-translate-y-1"
                   >
                     <div className="aspect-video overflow-hidden">
                       <img
-                        src={project.image}
-                        alt={project.title}
+                        src={image}
+                        alt={title}
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         loading="lazy"
                       />
@@ -135,23 +165,25 @@ export default function WhatWeDo() {
 
                     <div className="p-6">
                       <h3 className="mb-1 text-xl font-bold text-brand-heading">
-                        {project.title}
+                        {title}
                       </h3>
-                      <h4 className="mb-4 text-lg font-medium text-brand-purple">
-                        {project.marathiTitle}
-                      </h4>
+                      {subtitle ? (
+                        <h4 className="mb-4 text-lg font-medium text-brand-purple">{subtitle}</h4>
+                      ) : null}
 
                       <div className="mb-4 space-y-2">
                         <p className="text-sm leading-[1.5] text-brand-secondary">
-                          {isExpanded ? project.fullDescriptionEn : project.shortDescriptionEn}
+                          {isExpanded ? fullDescription : shortDescription}
                         </p>
-                        <p className="text-sm leading-[1.5] text-brand-muted">
-                          {isExpanded ? project.fullDescriptionMr : project.shortDescriptionMr}
-                        </p>
+                        {shortDescriptionMr || fullDescriptionMr ? (
+                          <p className="text-sm leading-[1.5] text-brand-muted">
+                            {isExpanded ? fullDescriptionMr : shortDescriptionMr}
+                          </p>
+                        ) : null}
                       </div>
 
                       <button
-                        onClick={() => toggleProject(project.id)}
+                        onClick={() => toggleProject(projectId)}
                         className="rounded-lg bg-gradient-to-r from-[#6b3fa0] to-[#9b59b6] px-4 py-2 text-sm font-medium text-brand-inverse transition-all duration-200 hover:shadow-lg hover:scale-105"
                       >
                         {isExpanded ? "Show Less" : "Read More"}
@@ -162,12 +194,12 @@ export default function WhatWeDo() {
                         <h5 className="mb-3 text-sm font-semibold text-brand-primary">Comments</h5>
 
                         {/* Comment Form */}
-                        <form onSubmit={(e) => handleCommentSubmit(e, project.id)} className="mb-4">
+                        <form onSubmit={(e) => handleCommentSubmit(e, projectId)} className="mb-4">
                           <div className="flex gap-2">
                             <input
                               type="text"
-                              value={commentInputs[project.id] || ''}
-                              onChange={(e) => handleCommentChange(project.id, e.target.value)}
+                              value={commentInputs[projectId] || ''}
+                              onChange={(e) => handleCommentChange(projectId, e.target.value)}
                               placeholder="Share your feedback or suggestions..."
                               className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-brand-primary focus:border-[#6b3fa0] focus:outline-none focus:ring-1 focus:ring-[#6b3fa0]"
                             />
@@ -181,7 +213,7 @@ export default function WhatWeDo() {
                         </form>
 
                         {/* Approved comments rendered by shared component */}
-                        <ApprovedComments projectId={project.id} comments={comments} />
+                        <ApprovedComments projectId={projectId} comments={comments} />
                       </div>
                     </div>
                   </article>

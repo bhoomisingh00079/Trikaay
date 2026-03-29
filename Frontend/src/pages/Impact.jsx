@@ -1,30 +1,44 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Navbar from "../components/Navbar";
 import SiteFooter from "../components/SiteFooter";
-
-const documents = [
-  { name: "80G Certificate", file: "80G.pdf", category: "org" },
-  { name: "PAN Card", file: "Pan Card.pdf", category: "org" },
-  { name: "TAN Card", file: "Tan Card 402109.pdf", category: "org" },
-  { name: "Certificate of Incorporation", file: "CERTIFICATE OF INCORPORATION.PDF", category: "org" },
-  { name: "Form 10A", file: "Form 10A_ARN (3).pdf", category: "org" },
-  { name: "MOA Subscriber Sheet", file: "subscribersheet_MOA.pdf", category: "org" },
-
-  { name: "ITR Acknowledgement", file: "TRIKAY CARE AND CREATION ASSOCIATION ITR ACKNOWLEDGEMENT F.Y 22-23.pdf", category: "csr" },
-  { name: "Balance Sheet", file: "TRIKEY CARE AND CREATION ASSOCIATION BALANCE SHEET CA SIGNED.pdf", category: "csr" },
-  { name: "Fund Utilization", file: "Fund Utilization.pdf", category: "csr" },
-
-  { name: "Activity Report", file: "TCCA Activity report Document (A4).pdf", category: "project" },
-  { name: "Progress Report", file: "Progress Report.pdf", category: "project" },
-  { name: "Project Report", file: "Trikay Fund utilization and project report.pdf", category: "project" },
-  { name: "Form LE", file: "AAJCT7962LE20221_signed.pdf", category: "project" },
-  { name: "Form LF", file: "AAJCT7962LF20221_signed.pdf", category: "project" },
-];
+import { apiUrl, mediaFileUrl } from "../utils/api";
 
 export default function Impact() {
-  const [filter, setFilter] = useState("org");
+  const [filter, setFilter] = useState("all");
+  const [documents, setDocuments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      try {
+        const response = await fetch(apiUrl('/api/media/docs'));
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setDocuments(data);
+          setFetchError("");
+        } else {
+          setDocuments([]);
+          setFetchError("No documents found in media API.");
+        }
+      } catch (error) {
+        console.error('Error fetching documents:', error);
+        setDocuments([]);
+        setFetchError("Could not load reports from API.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const filteredDocs = documents.filter(doc => doc.category === filter);
+    fetchDocuments();
+  }, []);
+
+  const filteredDocs = useMemo(
+    () => (filter === "all" ? documents : documents.filter((doc) => doc.category === filter)),
+    [documents, filter]
+  );
 
   return (
     <>
@@ -44,24 +58,36 @@ export default function Impact() {
               onChange={(e) => setFilter(e.target.value)}
               className="rounded-lg border px-4 py-2 text-lg shadow"
             >
+              <option value="all">All Reports</option>
               <option value="org">Organization Info</option>
               <option value="csr">CSR Reports</option>
               <option value="project">Implemented Projects</option>
             </select>
           </div>
 
+          {fetchError ? (
+            <p className="mb-6 text-center text-sm text-amber-700">{fetchError}</p>
+          ) : null}
+
           {/* DOCUMENT GRID */}
           <div className="grid gap-6 md:grid-cols-3">
+            {isLoading ? (
+              <p className="col-span-full text-center text-brand-secondary">Loading documents...</p>
+            ) : null}
+
+            {!isLoading && filteredDocs.length === 0 ? (
+              <p className="col-span-full text-center text-brand-secondary">No reports found for the selected filter.</p>
+            ) : null}
 
             {filteredDocs.map((doc) => (
               <div
-                key={doc.file}
+                key={doc.originalName}
                 className="rounded-xl bg-white p-6 text-center shadow-md transition hover:shadow-xl"
               >
-                <h2 className="mb-3 font-bold text-brand-heading">{doc.name}</h2>
+                <h2 className="mb-3 font-bold text-brand-heading">{doc.title || doc.originalName}</h2>
 
                 <a
-                  href={`/docs/${encodeURIComponent(doc.file)}`}
+                  href={mediaFileUrl(doc.originalName)}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-block rounded-full bg-blue-600 px-6 py-2 text-brand-inverse transition hover:scale-105 hover:shadow-lg"

@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
+import { apiUrl, mediaFileUrl } from "../utils/api";
 
 export default function SiteFooter({ showVolunteer = false }) {
   const [subscribeEmail, setSubscribeEmail] = useState('');
   const [subscribeStatus, setSubscribeStatus] = useState({ type: '', message: '' });
   const linkClasses = "text-base text-brand-primary transition hover:text-blue-600";
-
   const handleScrollToTop = () => {
     window.scrollTo(0, 0);
   };
@@ -16,7 +16,7 @@ export default function SiteFooter({ showVolunteer = false }) {
     setSubscribeStatus({ type: '', message: '' });
 
     try {
-      const response = await fetch('http://localhost:5001/api/subscribe', {
+      const response = await fetch(apiUrl('/api/subscribe'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: subscribeEmail }),
@@ -62,9 +62,10 @@ export default function SiteFooter({ showVolunteer = false }) {
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <img
-                src="/images/LOGO.jpeg"
+                src={mediaFileUrl("LOGO.jpeg")}
                 alt="Trikay Care And Creation Association logo"
                 className="h-10 w-auto"
+                loading="lazy"
               />
               <span className="text-lg font-bold text-brand-heading">Trikay Care And Creation Association</span>
             </div>

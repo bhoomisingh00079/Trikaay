@@ -1,14 +1,23 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { FaLock } from 'react-icons/fa';
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import LoginModal from "./LoginModal";
+import { mediaFileUrl } from "../utils/api";
 
 export default function Navbar() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   return (
     <header className="sticky top-0 z-[1001] bg-gradient-to-br from-[#6b3fa0] to-[#9b59b6] px-4 py-2 text-white shadow md:px-10">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <Link to="/" className="flex items-center gap-2">
           <img
-            src="/images/LOGO.jpeg"
+            src={mediaFileUrl("LOGO.jpeg")}
             alt="Trikay Care And Creation Association logo"
-            className="h-10 w-auto" 
+            className="h-10 w-auto"
+            loading="lazy"
           />
           <span className="sr-only">Trikay Care And Creation Association</span>
         </Link>
@@ -112,8 +121,27 @@ export default function Navbar() {
           >
             Impact Report
           </NavLink>
+
+          {/* Admin Lock Icon */}
+          <button
+            onClick={() => {
+              if (isAuthenticated) {
+                navigate('/admin');
+              } else {
+                setIsModalOpen(true);
+              }
+            }}
+            className="ml-2 flex items-center gap-2 rounded-full bg-blue-500 px-4 py-2 font-medium text-white transition hover:bg-blue-600"
+            title={isAuthenticated ? "Go to Admin Panel" : "Admin Login"}
+          >
+            <FaLock size={16} />
+            Login
+          </button>
         </nav>
       </div>
+
+      {/* Login Modal */}
+      <LoginModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </header>
   );
 }

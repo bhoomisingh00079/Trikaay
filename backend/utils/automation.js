@@ -7,7 +7,7 @@
 const googleSheets = require('./googleSheets');
 const certificate = require('./certificate');
 const emailService = require('./emailService');
-const path = require('path');
+const MediaAsset = require('../models/MediaAsset');
 
 let isProcessing = false;
 let automationInterval = null;
@@ -55,25 +55,38 @@ async function processVolunteerCertificate(row, rowNumber, spreadsheetId) {
             await googleSheets.updateCell(spreadsheetId, rowNumber, 6, 'Processing'); // Column G
         }
 
-        // Determine certificate filename and path
+        // Determine certificate filename
         const safeName = name ? name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-]/g, '') : 'volunteer';
         const filename = `${certId}_${safeName}.pdf`;
 
-        const fs = require('fs');
-        const path = require('path');
-        const certDir = path.join(__dirname, '../certificates');
-        const fullCertPath = path.join(certDir, filename);
+        let pdfBuffer;
+        const existingAsset = await MediaAsset.findOne({ originalName: filename }).lean();
 
-        if (!fs.existsSync(fullCertPath)) {
-            const pdfBuffer = await certificate.generateCertificatePDF(
+        if (existingAsset?.data) {
+            pdfBuffer = existingAsset.data;
+            console.log(`   Certificate already exists in MongoDB: ${filename}`);
+        } else {
+            pdfBuffer = await certificate.generateCertificatePDF(
                 { name, phone, email, position, experience, availability },
                 certId,
                 process.env.NGO_NAME || 'Our NGO'
             );
-            await certificate.saveCertificateToFile(pdfBuffer, filename);
-            console.log(`   Certificate created at ${fullCertPath}`);
-        } else {
-            console.log(`   Certificate already exists at ${fullCertPath}`);
+
+            await MediaAsset.findOneAndUpdate(
+                { originalName: filename },
+                {
+                    originalName: filename,
+                    kind: 'pdf',
+                    category: 'certificate',
+                    title: `Volunteer Certificate - ${name}`,
+                    mimeType: 'application/pdf',
+                    size: pdfBuffer.length,
+                    data: pdfBuffer,
+                },
+                { upsert: true, new: true, setDefaultsOnInsert: true }
+            );
+
+            console.log(`   Certificate stored in MongoDB: ${filename}`);
         }
 
         // Send certificate email (always use assigned certId)
@@ -81,7 +94,8 @@ async function processVolunteerCertificate(row, rowNumber, spreadsheetId) {
             to: email,
             volunteerName: name,
             certificateId: certId,
-            certificatePath: fullCertPath,
+            certificateBuffer: pdfBuffer,
+            certificateFileName: filename,
         });
 
         // Update status to Completed
@@ -145,10 +159,10 @@ async function runAutomation(spreadsheetId) {
 /**
  * Start the automation process
  * @param {string} spreadsheetId - Google Sheets ID
- * @param {number} interval - Interval in milliseconds (default 10000 = 10 seconds)
+ * @param {number} interval - Interval in milliseconds (default 60000 = 60 seconds)
  * @returns {void}
  */
-function startAutomation(spreadsheetId, interval = 10000) {
+function startAutomation(spreadsheetId, interval = 60000) {
     if (automationInterval) {
         console.log('⚠ Automation already running');
         return;

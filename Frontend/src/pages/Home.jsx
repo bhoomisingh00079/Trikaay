@@ -1,22 +1,26 @@
 import { useEffect, useRef, useState } from "react";
 import Navbar from "../components/Navbar";
 import SiteFooter from "../components/SiteFooter";
-import img1 from "../assets/img1.jpg";
-import img2 from "../assets/img2.jpg";
-import img3 from "../assets/img3.jpg";
+import { apiUrl, mediaFileUrl } from "../utils/api";
 
-const statsData = [
+const fallbackStatsData = [
   { icon: "😊", value: 754, label: "Global Supporters" },
   { icon: "🚀", value: 675, label: "Successful Missions" },
   { icon: "👤", value: 1248, label: "Dedicated Volunteers" },
   { icon: "🌍", value: 24, label: "Cities Impacted" },
 ];
 
+const statIcons = ["😊", "🚀", "👤", "🌍"];
+
 export default function Home() {
-  const statsRef = useRef(null);
-  const hasAnimatedRef = useRef(false);
-  const [counters, setCounters] = useState(statsData.map(() => 0));
-  const [isCounting, setIsCounting] = useState(false);
+  const animationRef = useRef(null);
+  const [statsData, setStatsData] = useState(fallbackStatsData);
+  const [counters, setCounters] = useState(fallbackStatsData.map(() => 0));
+  const homeCardImages = {
+    education: mediaFileUrl("img1.jpg"),
+    impact: mediaFileUrl("img2.jpg"),
+    transformation: mediaFileUrl("img3.jpg"),
+  };
   const [contactForm, setContactForm] = useState({
     name: "",
     phone: "",
@@ -26,47 +30,35 @@ export default function Home() {
   const [contactStatus, setContactStatus] = useState({ type: "", message: "" });
 
   useEffect(() => {
-    const section = statsRef.current;
+    const targets = statsData.map((item) => {
+      const num = Number(item.value);
+      return Number.isFinite(num) ? num : 0;
+    });
 
-    if (!section) return;
+    const duration = 1200;
+    const startTime = performance.now();
 
-    const animateCounters = () => {
-      const duration = 2000;
-      const startTime = performance.now();
-      setIsCounting(true);
+    setCounters(targets.map(() => 0));
 
-      const step = (currentTime) => {
-        const progress = Math.min((currentTime - startTime) / duration, 1);
+    const tick = (now) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
 
-        setCounters(statsData.map((item) => Math.floor(item.value * progress)));
+      setCounters(targets.map((target) => Math.round(target * eased)));
 
-        if (progress < 1) {
-          requestAnimationFrame(step);
-        } else {
-          setCounters(statsData.map((item) => item.value));
-          setIsCounting(false);
-        }
-      };
-
-      requestAnimationFrame(step);
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(tick);
+      }
     };
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && !hasAnimatedRef.current) {
-            hasAnimatedRef.current = true;
-            animateCounters();
-            observer.disconnect();
-          }
-        });
-      },
-      { threshold: 0.35 },
-    );
+    animationRef.current = requestAnimationFrame(tick);
 
-    observer.observe(section);
-    return () => observer.disconnect();
-  }, []);
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [statsData]);
 
   const buttonClasses =
     "rounded-full bg-blue-600 px-6 py-2 font-medium text-brand-inverse transition hover:scale-105 hover:bg-blue-700 hover:shadow-lg";
@@ -86,7 +78,7 @@ export default function Home() {
     setContactStatus({ type: "", message: "" });
 
     try {
-      const response = await fetch("http://localhost:5001/api/contact", {
+      const response = await fetch(apiUrl('/api/contact'), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(contactForm),
@@ -146,7 +138,7 @@ export default function Home() {
           {/* Cards */}
           <section className="mt-[-10px] grid gap-8 px-6 pb-10 pt-10 text-center md:grid-cols-3">
             <article className="flex flex-col items-center gap-3 rounded-xl bg-white p-6 shadow-md">
-              <img src={img1} alt="Education support" className="h-64 w-48 rounded-xl object-cover shadow-md transition duration-300 hover:scale-105" />
+              <img src={homeCardImages.education} alt="Education support" className="h-64 w-48 rounded-xl object-cover shadow-md transition duration-300 hover:scale-105" loading="lazy" />
               <p>
                 <b>Dreams Without Limits —</b>
                 <br />
@@ -156,7 +148,7 @@ export default function Home() {
             </article>
 
             <article className="flex flex-col items-center gap-3 rounded-xl bg-white p-6 shadow-md">
-              <img src={img2} alt="Direct impact support" className="h-64 w-48 rounded-xl object-cover shadow-md transition duration-300 hover:scale-105" />
+              <img src={homeCardImages.impact} alt="Direct impact support" className="h-64 w-48 rounded-xl object-cover shadow-md transition duration-300 hover:scale-105" loading="lazy" />
               <p>
                 <b>Direct Impact Support —</b>
                 <br />
@@ -169,7 +161,7 @@ export default function Home() {
             </article>
 
             <article className="flex flex-col items-center gap-3 rounded-xl bg-white p-6 shadow-md">
-              <img src={img3} alt="Social transformation" className="h-64 w-48 rounded-xl object-cover shadow-md transition duration-300 hover:scale-105" />
+              <img src={homeCardImages.transformation} alt="Social transformation" className="h-64 w-48 rounded-xl object-cover shadow-md transition duration-300 hover:scale-105" loading="lazy" />
               <p>
                 <b>Social Transformation —</b>
                 <br />
@@ -184,7 +176,6 @@ export default function Home() {
 
           {/* Stats */}
           <section
-            ref={statsRef}
             className="grid grid-cols-2 gap-6 bg-purple-300 py-2 text-center md:grid-cols-4"
           >
             {statsData.map((item, index) => (
@@ -197,9 +188,7 @@ export default function Home() {
                   <span
                     data-animation-duration="2000"
                     data-value={item.value}
-                    className={`inline-block min-w-[4ch] text-5xl font-extrabold leading-none transition-all duration-300 ${
-                      isCounting ? "scale-110" : "scale-100"
-                    }`}
+                    className="inline-block min-w-[4ch] text-5xl font-extrabold leading-none transition-all duration-300"
                   >
                     {counters[index]}
                   </span>
@@ -210,8 +199,8 @@ export default function Home() {
           </section>
 
           {/* Contact */}
-          <section className="grid gap-10 px-10 py-16 md:grid-cols-2">
-            <div className="flex flex-col gap-4">
+          <section className="px-10 py-16">
+            <div className="mx-auto flex max-w-3xl flex-col gap-4">
               <h2 className="mb-2 text-2xl font-bold text-brand-heading">Get In Touch Now!</h2>
               <form
                 onSubmit={handleContactSubmit}
@@ -268,17 +257,6 @@ export default function Home() {
                   </div>
                 )}
               </form>
-            </div>
-
-            <div className="flex flex-col justify-center gap-3 rounded-lg bg-gray-100 p-6">
-              <h2 className="mb-2 text-2xl font-bold text-brand-heading">Client Testimonials</h2>
-              <p className="text-base italic text-brand-secondary">
-                “This NGO is a true force for positive change. Their dedication
-                to making a difference in the world is really inspiring. Support
-                their impactful work today!”
-              </p>
-              <p className="mt-2 font-semibold text-brand-heading">Pritam Singh</p>
-              <p className="text-base text-brand-muted">- Mumbai</p>
             </div>
           </section>
 

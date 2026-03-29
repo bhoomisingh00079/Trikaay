@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 export default function VolunteerForm() {
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -30,7 +31,7 @@ export default function VolunteerForm() {
     setSuccess(false); // Reset success state
 
     try {
-      const response = await fetch('http://localhost:5001/api/register-volunteer', {
+      const response = await fetch(`${API_BASE_URL}/api/register-volunteer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -50,7 +51,10 @@ export default function VolunteerForm() {
           availability: "",
         });
       } else {
-        setError(data.message || 'Registration failed. Please try again.');
+        const details = Array.isArray(data?.details)
+          ? ` (${data.details.map((d) => d.msg).join(', ')})`
+          : '';
+        setError((data.message || data.error || 'Registration failed. Please try again.') + details);
       }
     } catch (error) {
       setError('Network error. Please check your connection and try again.');

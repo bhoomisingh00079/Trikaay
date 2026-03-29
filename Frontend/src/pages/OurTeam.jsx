@@ -1,56 +1,29 @@
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import SiteFooter from "../components/SiteFooter";
 
-const teamMembers = [
-  {
-    name: "Shilpa Bambarkar",
-    role: "Director",
-    image: "https://trikay.org/admin/upload/2110230607244.png",
-  },
-  {
-    name: "Mr. Jayesh Bambarkar",
-    role: "Director",
-    image: "https://trikay.org/admin/upload/301023033946Untitled%20design.png",
-  },
-  {
-    name: "Mr. Dinesh Mishra",
-    role: "Founder",
-    image: "https://trikay.org/admin/upload/2110230606323.png",
-  },
-  {
-    name: "Adv. Roshani Thakur",
-    role: "Legal Advisor",
-    image:
-      "https://trikay.org/admin/upload/2212230333068015bbcd-1f63-4025-9075-c60327f1b902.jpeg",
-  },
-  {
-    name: "Mrs. Snehal Jadhav",
-    role: "Counsellor",
-    image: "https://trikay.org/admin/upload/2110230606422.png",
-  },
-  {
-    name: "Mrs. Shweta Damle",
-    role: "Our Mentor",
-    image: "https://trikay.org/admin/upload/251023045307Untitled%20design%20(2).png",
-  },
-  {
-    name: "Mr. Santosh Shinde",
-    role: "Our Mentor",
-    image: "https://trikay.org/admin/upload/251023045319Untitled%20design%20(1).png",
-  },
-  {
-    name: "Porav Enterprises",
-    role: "Web Developer Partner",
-    image: "https://trikay.org/admin/upload/2110230606526.png",
-  },
-  {
-    name: "Professional Utilities Company",
-    role: "Legal & Compliance Partner",
-    image: "https://trikay.org/admin/upload/2110230616395.png",
-  },
-];
-
 export default function OurTeam() {
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+
+  useEffect(() => {
+    const fetchTeam = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/team`);
+        const data = await response.json();
+        setTeamMembers(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Error fetching team:', error);
+        setTeamMembers([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTeam();
+  }, [API_BASE_URL]);
+
   const firstRow = teamMembers.slice(0, 5);
   const secondRow = teamMembers.slice(5);
 
@@ -73,13 +46,17 @@ export default function OurTeam() {
       </section>
 
       <section className="mx-auto max-w-[1100px] px-5 py-10">
+        {isLoading ? (
+          <p className="mb-6 text-center text-brand-secondary">Loading team members...</p>
+        ) : null}
+
         <div className="relative flex flex-wrap justify-center gap-6 rounded-[18px] bg-gradient-to-b from-[rgba(255,255,255,0.72)] to-[rgba(243,238,251,0.78)] px-2 py-2.5 max-[768px]:gap-4">
           <div className="pointer-events-none absolute inset-[-1px] rounded-[18px] shadow-[inset_0_0_0_1px_rgba(107,63,160,0.06)]" />
           {firstRow.map((member) => (
-            <article className={cardClasses} key={member.name}>
+            <article className={cardClasses} key={member._id || member.name}>
               <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-br from-[#6b3fa0] to-[#9b59b6]" />
               <img
-                src={member.image}
+                src={member.photo || member.image}
                 alt={member.name}
                 className={cardImageClasses}
                 loading="lazy"
@@ -97,10 +74,10 @@ export default function OurTeam() {
         <div className="relative mt-7 flex flex-wrap justify-center gap-6 rounded-[18px] bg-gradient-to-b from-[rgba(255,255,255,0.72)] to-[rgba(243,238,251,0.78)] px-2 py-2.5 max-[768px]:gap-4">
           <div className="pointer-events-none absolute inset-[-1px] rounded-[18px] shadow-[inset_0_0_0_1px_rgba(107,63,160,0.06)]" />
           {secondRow.map((member) => (
-            <article className={cardClasses} key={member.name}>
+            <article className={cardClasses} key={member._id || member.name}>
               <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-br from-[#6b3fa0] to-[#9b59b6]" />
               <img
-                src={member.image}
+                src={member.photo || member.image}
                 alt={member.name}
                 className={cardImageClasses}
                 loading="lazy"

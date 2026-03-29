@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ValidationRules, validateForm, sanitizeInput } from '../utils/validation';
 
 export default function CommentForm() {
   const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
@@ -6,6 +7,7 @@ export default function CommentForm() {
     name: '',
     text: '',
   });
+  const [validationErrors, setValidationErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -16,6 +18,13 @@ export default function CommentForm() {
       ...prev,
       [name]: value,
     }));
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
     // Clear messages on input change
     setSuccessMessage('');
     setErrorMessage('');
@@ -23,9 +32,23 @@ export default function CommentForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    setValidationErrors({});
     setSuccessMessage('');
     setErrorMessage('');
+
+    // Validate form
+    const { isValid, errors } = validateForm(formData, {
+      name: 'name',
+      text: 'message',
+    });
+
+    if (!isValid) {
+      setValidationErrors(errors);
+      setErrorMessage('Please fix the errors below before submitting.');
+      return;
+    }
+
+    setIsLoading(true);
 
     try {
       const apiUrl = `${API_URL}/comments`;
@@ -37,8 +60,8 @@ export default function CommentForm() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: formData.name.trim(),
-          text: formData.text.trim(),
+          name: sanitizeInput(formData.name),
+          text: sanitizeInput(formData.text),
         }),
       });
 
@@ -81,10 +104,17 @@ export default function CommentForm() {
       <h2 className="mb-4 text-2xl font-bold text-gray-900">Share Your Feedback</h2>
       
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Error Message */}
+        {errorMessage && (
+          <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
+            {errorMessage}
+          </div>
+        )}
+
         {/* Name Input */}
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-            Your Name
+            Your Name *
           </label>
           <input
             type="text"
@@ -94,14 +124,25 @@ export default function CommentForm() {
             onChange={handleInputChange}
             placeholder="Enter your name"
             required
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 focus:border-[#6b3fa0] focus:outline-none focus:ring-1 focus:ring-[#6b3fa0]"
+            aria-invalid={!!validationErrors.name}
+            aria-describedby={validationErrors.name ? 'name-error' : undefined}
+            className={`w-full rounded-lg border px-4 py-2 text-gray-900 focus:outline-none focus:ring-1 ${
+              validationErrors.name
+                ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:border-[#6b3fa0] focus:ring-[#6b3fa0]'
+            }`}
           />
+          {validationErrors.name && (
+            <p id="name-error" className="mt-1 text-sm text-red-600">
+              {validationErrors.name}
+            </p>
+          )}
         </div>
 
         {/* Comment Input */}
         <div>
           <label htmlFor="text" className="block text-sm font-medium text-gray-700 mb-1">
-            Your Comment
+            Your Comment *
           </label>
           <textarea
             id="text"
@@ -111,9 +152,33 @@ export default function CommentForm() {
             placeholder="Share your feedback or suggestions..."
             required
             rows="4"
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 focus:border-[#6b3fa0] focus:outline-none focus:ring-1 focus:ring-[#6b3fa0]"
+            aria-invalid={!!validationErrors.text}
+            aria-describedby={validationErrors.text ? 'text-error' : undefined}
+            className={`w-full rounded-lg border px-4 py-2 text-gray-900 focus:outline-none focus:ring-1 ${
+              validationErrors.text
+                ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:border-[#6b3fa0] focus:ring-[#6b3fa0]'
+            }`}
           />
+          {validationErrors.text && (
+            <p id="text-error" className="mt-1 text-sm text-red-600">
+              {validationErrors.text}
+            </p>
+          )}
+          <p className="mt-1 text-xs text-gray-500">
+            {formData.text.length}/5000 characters
+          </p>
         </div>
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full rounded-lg bg-blue-600 px-4 py-2 text-white font-medium transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isLoading ? 'Submitting...' : 'Submit Comment'}
+        </button>
+      </form>
 
         {/* Success Message */}
         {successMessage && (

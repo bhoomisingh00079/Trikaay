@@ -14,20 +14,18 @@ L.Icon.Default.mergeOptions({
 });
 
 export default function Contact() {
-  const swapnalayaLocation = {
-    // Exact Swapnalaya children's home for girls location from Google Maps link
-    lat: 18.980835,
-    lng: 73.1189057,
-    address: "Swapnalaya children's home for girls, Old Panvel, Navi Mumbai - 410206",
-    zoom: 15
-  };
-
   const contactInfo = {
     phone: "+91 82913 05959",
     email: "info@trikay.org",
-    addressMain: "Registered Office - A-00 Bhuvaneshwar Plaza, Shree Samarth Nagar, Bhuvaneshwar, Tal.Roha, Dist. Raigad, 402109, Maharashtra",
-    addressSwapnalaya: "102, First Floor, National Galaxy, opposite Moraj Auto Stop on Takka Road, Takka Gaon, Old Panvel, Navi Mumbai - 410206",
-    addressSwayamsiddha: "Sector 18, New Panvel, Raigad, 402109, Maharashtra"
+    addressMain: "",
+    addressSwapnalaya: "",
+    addressSwayamsiddha: "",
+  };
+  const swapnalayaLocation = {
+    lat: 18.980835,
+    lng: 73.1189057,
+    address: "Swapnalaya children's home for girls, Old Panvel, Navi Mumbai - 410206",
+    zoom: 15,
   };
 
   return (
@@ -45,23 +43,17 @@ export default function Contact() {
             <div className="space-y-6 rounded-xl border border-slate-200 bg-slate-50 p-7 shadow-sm">
               <div>
                 <h2 className="text-2xl font-bold text-brand-heading">Main Address</h2>
-                <p className="mt-2 text-lg font-semibold">Registered Office - A-00</p>
-                <p>Bhuvaneshwar Plaza</p>
-                <p>Shree Samarth Nagar, Bhuvaneshwar, Tal.Roha</p>
-                <p>Dist. Raigad, 402109, Maharashtra</p>
+                <p className="mt-2 whitespace-pre-line">{contactInfo.addressMain || "Address not configured"}</p>
               </div>
 
               <div>
                 <h2 className="text-2xl font-bold text-brand-heading">Swapnalaya Address</h2>
-                <p className="mt-2">102, First Floor, National Galaxy</p>
-                <p>Opposite Moraj Auto Stop on Takka Road, Takka Gaon</p>
-                <p>Old Panvel, Navi Mumbai - 410206</p>
+                <p className="mt-2 whitespace-pre-line">{contactInfo.addressSwapnalaya || "Address not configured"}</p>
               </div>
 
               <div>
                 <h2 className="text-2xl font-bold text-brand-heading">Swayamsiddha Address</h2>
-                <p className="mt-2">Sector 18, New Panvel, Raigad</p>
-                <p>402109, Maharashtra</p>
+                <p className="mt-2 whitespace-pre-line">{contactInfo.addressSwayamsiddha || "Address not configured"}</p>
               </div>
 
               <div className="rounded-xl bg-white p-4">

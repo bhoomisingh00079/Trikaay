@@ -49,11 +49,28 @@ async function sendCertificateEmail(params) {
             throw new Error('Email service not initialized');
         }
 
-        const { to, volunteerName, certificateId, certificatePath } = params;
+        const {
+            to,
+            volunteerName,
+            certificateId,
+            certificatePath,
+            certificateBuffer,
+            certificateFileName,
+        } = params;
 
-        // Check if certificate file exists
-        if (!fs.existsSync(certificatePath)) {
-            throw new Error(`Certificate file not found: ${certificatePath}`);
+        const attachment = {
+            filename: certificateFileName || `${certificateId}.pdf`,
+        };
+
+        if (Buffer.isBuffer(certificateBuffer)) {
+            attachment.content = certificateBuffer;
+        } else if (certificatePath) {
+            if (!fs.existsSync(certificatePath)) {
+                throw new Error(`Certificate file not found: ${certificatePath}`);
+            }
+            attachment.path = certificatePath;
+        } else {
+            throw new Error('Certificate attachment missing: provide certificateBuffer or certificatePath');
         }
 
         const mailOptions = {
@@ -78,10 +95,7 @@ async function sendCertificateEmail(params) {
                 </div>
             `,
             attachments: [
-                {
-                    filename: `${certificateId}.pdf`,
-                    path: certificatePath,
-                },
+                attachment,
             ],
         };
 
