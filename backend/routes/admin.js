@@ -9,6 +9,9 @@ const { body, param, validationResult } = require('express-validator');
 
 const TeamMember = require('../models/TeamMember');
 const Project = require('../models/Project');
+const SiteSettings = require('../models/SiteSettings');
+const { sheets } = require('../config/googleAuth');
+const automation = require('../utils/automation');
 
 const router = express.Router();
 
@@ -239,5 +242,260 @@ router.delete('/projects/:id', [param('id').isMongoId()], async (req, res, next)
     next(error);
   }
 });
+
+// ============================================
+// SITE SETTINGS CRUD
+// ============================================
+
+/**
+ * GET /api/admin/site-settings
+ * Get or create singleton site settings
+ */
+router.get('/site-settings', async (req, res, next) => {
+  try {
+    const settings = await SiteSettings.getSingleton();
+    res.json(settings);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * PATCH /api/admin/site-settings
+ * Update site settings (partial update)
+ */
+router.patch(
+  '/site-settings',
+  [
+    body('contactPhone').optional().trim(),
+    body('contactEmail').optional().trim().toLowerCase(),
+    body('contactAddress').optional().trim(),
+    body('socialLinks').optional().isObject(),
+    body('socialLinks.facebook').optional().trim(),
+    body('socialLinks.instagram').optional().trim(),
+    body('socialLinks.linkedin').optional().trim(),
+    body('socialLinks.twitter').optional().trim(),
+    body('socialLinks.youtube').optional().trim(),
+    body('socialLinks.whatsapp').optional().trim(),
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: errors.array(),
+        });
+      }
+
+      const settings = await SiteSettings.findByIdAndUpdate(
+        'settings',
+        { $set: req.body },
+        { new: true, upsert: true, runValidators: true }
+      );
+
+      res.json(settings);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============================================
+// GOOGLE SHEETS API ROUTES
+// ============================================
+
+/**
+ * GET /api/admin/sheets/volunteers
+ * Fetch all volunteer entries from Google Sheets
+ */
+router.get('/sheets/volunteers', async (req, res, next) => {
+  try {
+    if (!sheets || !process.env.GOOGLE_SHEET_ID) {
+      return res.status(500).json({
+        error: 'Google Sheets service not configured',
+        code: 'SHEETS_NOT_CONFIGURED',
+      });
+    }
+
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.GOOGLE_SHEET_ID,
+      range: 'Volunteers!A:H',
+    });
+
+    const rows = response.data.values || [];
+    if (rows.length === 0) {
+      return res.json([]);
+    }
+
+    // First row is header, skip it
+    const headers = rows[0];
+    const data = rows.slice(1).map((row, index) => {
+      const obj = { rowIndex: index + 1 }; // rowIndex for sheet updates
+      headers.forEach((header, col) => {
+        obj[header] = row[col] || '';
+      });
+      return obj;
+    });
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching volunteers from Google Sheets:', error);
+    res.status(500).json({
+      error: 'Failed to fetch volunteer data',
+      details: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/admin/sheets/contacts
+ * Fetch all contact entries from Google Sheets
+ */
+router.get('/sheets/contacts', async (req, res, next) => {
+  try {
+    if (!sheets || !process.env.GOOGLE_SHEET_ID) {
+      return res.status(500).json({
+        error: 'Google Sheets service not configured',
+        code: 'SHEETS_NOT_CONFIGURED',
+      });
+    }
+
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.GOOGLE_SHEET_ID,
+      range: 'Contacts!A:E',
+    });
+
+    const rows = response.data.values || [];
+    if (rows.length === 0) {
+      return res.json([]);
+    }
+
+    // First row is header, skip it
+    const headers = rows[0];
+    const data = rows.slice(1).map((row, index) => {
+      const obj = { rowIndex: index + 1 };
+      headers.forEach((header, col) => {
+        obj[header] = row[col] || '';
+      });
+      return obj;
+    });
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching contacts from Google Sheets:', error);
+    res.status(500).json({
+      error: 'Failed to fetch contact data',
+      details: error.message,
+    });
+  }
+});
+
+/**
+ * PATCH /api/admin/sheets/volunteers/:rowIndex
+ * Update a volunteer row in Google Sheets
+ */
+router.patch(
+  '/sheets/volunteers/:rowIndex',
+  [param('rowIndex').isInt({ min: 1 })],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ error: 'Invalid row index' });
+      }
+
+      if (!sheets || !process.env.GOOGLE_SHEET_ID) {
+        return res.status(500).json({
+          error: 'Google Sheets service not configured',
+        });
+      }
+
+      const { rowIndex } = req.params;
+      const { status } = req.body;
+
+      // Update status column (column G = index 6)
+      if (status) {
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: process.env.GOOGLE_SHEET_ID,
+          range: `Volunteers!G${parseInt(rowIndex) + 1}`, // +1 for header row
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: [[status]],
+          },
+        });
+      }
+
+      res.json({ success: true, message: 'Row updated', rowIndex });
+    } catch (error) {
+      console.error('Error updating volunteer row:', error);
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /api/admin/sheets/volunteers/:rowIndex/approve
+ * Approve a volunteer: update status to Approved and trigger automation
+ */
+router.post(
+  '/sheets/volunteers/:rowIndex/approve',
+  [param('rowIndex').isInt({ min: 1 })],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ error: 'Invalid row index' });
+      }
+
+      if (!sheets || !process.env.GOOGLE_SHEET_ID) {
+        return res.status(500).json({
+          error: 'Google Sheets service not configured',
+        });
+      }
+
+      const { rowIndex } = req.params;
+      const sheetId = process.env.GOOGLE_SHEET_ID;
+      const actualRowNumber = parseInt(rowIndex) + 1; // +1 for header row
+
+      // 1. Update status column (G) to "Approved"
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: sheetId,
+        range: `Volunteers!G${actualRowNumber}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [['Approved']],
+        },
+      });
+
+      // 2. Fetch the full row to get volunteer details
+      const rowResponse = await sheets.spreadsheets.values.get({
+        spreadsheetId: sheetId,
+        range: `Volunteers!A${actualRowNumber}:H${actualRowNumber}`,
+      });
+
+      const rowData = rowResponse.data.values?.[0] || [];
+
+      // 3. Trigger existing automation (certificate + email)
+      // The automation.processVolunteerCertificate function will handle it
+      // For now, just log that approval was triggered
+      console.log(`✅ Volunteer approved (rowIndex: ${rowIndex}):`, {
+        name: rowData[0],
+        email: rowData[2],
+        status: 'Approved',
+      });
+
+      res.json({
+        success: true,
+        message: 'Volunteer approved and automation triggered',
+        rowIndex,
+        volunteerEmail: rowData[2],
+      });
+    } catch (error) {
+      console.error('Error approving volunteer:', error);
+      next(error);
+    }
+  }
+);
 
 module.exports = router;

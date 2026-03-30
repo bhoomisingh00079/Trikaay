@@ -1,6 +1,27 @@
 const express = require('express');
+const multer = require('multer');
+const { body, param, validationResult } = require('express-validator');
+
 const MediaAsset = require('../models/MediaAsset');
 const { cacheControl, CACHE_DURATIONS } = require('../middleware/cacheControl');
+const { verifyToken } = require('../middleware/auth');
+
+// Configure multer for in-memory file storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB max
+  },
+  fileFilter: (req, file, cb) => {
+    // Allow PDFs and images
+    const allowed = ['application/pdf', 'image/jpeg', 'image/png'];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`File type ${file.mimetype} not allowed`));
+    }
+  },
+});
 
 const router = express.Router();
 
@@ -63,5 +84,101 @@ router.get('/file/:fileName', cacheControl(CACHE_DURATIONS.MEDIA), async (req, r
     return next(error);
   }
 });
+
+// ============================================
+// MEDIA MANAGEMENT (Protected Routes)
+// ============================================
+
+/**
+ * POST /api/media/upload
+ * Upload a new media file (PDF or image)
+ * Requires JWT authentication
+ */
+router.post(
+  '/upload',
+  verifyToken,
+  upload.single('file'),
+  [
+    body('title').trim().isLength({ min: 1 }),
+    body('category')
+      .isIn(['org', 'csr', 'project', 'general', 'certificate'])
+      .escape(),
+  ],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: errors.array(),
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file provided' });
+      }
+
+      const { title, category } = req.body;
+      const { originalname, mimetype, buffer, size } = req.file;
+
+      // Determine kind (pdf or image)
+      const kind = mimetype === 'application/pdf' ? 'pdf' : 'image';
+
+      // Create MediaAsset document
+      const mediaAsset = new MediaAsset({
+        originalName: originalname,
+        kind,
+        category: category || 'general',
+        title: title || originalname,
+        mimeType: mimetype,
+        size,
+        data: buffer,
+      });
+
+      await mediaAsset.save();
+
+      res.status(201).json({
+        _id: mediaAsset._id,
+        title: mediaAsset.title,
+        category: mediaAsset.category,
+        size: mediaAsset.size,
+        kind: mediaAsset.kind,
+        createdAt: mediaAsset.createdAt,
+        uploadedBy: req.user?.email,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * DELETE /api/media/:id
+ * Delete a media file by MongoDB _id
+ * Requires JWT authentication
+ */
+router.delete(
+  '/:id',
+  verifyToken,
+  [param('id').isMongoId()],
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ error: 'Invalid ID' });
+      }
+
+      const media = await MediaAsset.findByIdAndDelete(req.params.id);
+
+      if (!media) {
+        return res.status(404).json({ error: 'Media not found' });
+      }
+
+      res.json({ message: 'Media deleted', id: media._id });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 module.exports = router;
