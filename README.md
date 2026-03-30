@@ -119,7 +119,7 @@ What it prints:
 Run it from backend:
 
 ```bash
-cd backend
+cd "backend/scripts"
 npm run mongo:report
 ```
 
