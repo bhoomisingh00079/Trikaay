@@ -27,6 +27,9 @@ export const normalizeAssetUrl = (url) => {
 export const getSiteSettings = () =>
   axiosInstance.get('/api/admin/site-settings');
 
+export const getPublicSiteSettings = () =>
+  axiosInstance.get('/api/site-settings');
+
 export const updateSiteSettings = (data) =>
   axiosInstance.patch('/api/admin/site-settings', data);
 
@@ -37,11 +40,20 @@ export const getSheetVolunteers = () =>
 export const getSheetContacts = () =>
   axiosInstance.get('/api/admin/sheets/contacts');
 
+export const getSheetComments = () =>
+  axiosInstance.get('/api/admin/sheets/comments');
+
+export const getSheetSubscribers = () =>
+  axiosInstance.get('/api/admin/sheets/subscribers');
+
 export const updateVolunteerRow = (rowIndex, data) =>
   axiosInstance.patch(`/api/admin/sheets/volunteers/${rowIndex}`, data);
 
 export const approveVolunteer = (rowIndex) =>
   axiosInstance.post(`/api/admin/sheets/volunteers/${rowIndex}/approve`);
+
+export const approveComment = (rowNumber) =>
+  axiosInstance.post(`/api/admin/sheets/comments/${rowNumber}/approve`);
 
 // Media
 export const uploadMedia = (formData) =>
@@ -51,6 +63,17 @@ export const uploadMedia = (formData) =>
 
 export const deleteMedia = (id) =>
   axiosInstance.delete(`/api/media/${id}`);
+
+export const deleteMediaByName = (fileName) =>
+  axiosInstance.delete(`/api/media/name/${encodeURIComponent(fileName)}`);
+
+export const getMediaDocs = () =>
+  axiosInstance.get('/api/media/docs');
+
+export const getMediaDocsAll = () =>
+  axiosInstance.get('/api/media/docs', {
+    params: { includeCertificates: 'true' },
+  });
 
 // Projects
 export const getProjects = () =>
@@ -64,3 +87,6 @@ export const updateProject = (id, data) =>
 
 export const deleteProject = (id) =>
   axiosInstance.delete(`/api/admin/projects/${id}`);
+
+export const getTeamMembers = () =>
+  axiosInstance.get('/api/admin/team');

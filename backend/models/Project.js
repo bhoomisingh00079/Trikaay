@@ -14,7 +14,8 @@ const projectSchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      required: true,
+      required: false,
+      default: '',
       trim: true,
     },
     shortDescriptionEn: {
@@ -43,6 +44,13 @@ const projectSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
+    },
+    projectNumber: {
+      type: Number,
+      required: false,
+      unique: true,
+      sparse: true,
+      min: 1,
     },
     tags: [{
       type: String,

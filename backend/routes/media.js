@@ -10,7 +10,7 @@ const { verifyToken } = require('../middleware/auth');
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB max
+    fileSize: 15 * 1024 * 1024, // keep below MongoDB 16MB document limit
   },
   fileFilter: (req, file, cb) => {
     // Allow PDFs and images
@@ -28,12 +28,15 @@ const router = express.Router();
 // List PDFs with 5-minute cache
 router.get('/docs', cacheControl(CACHE_DURATIONS.API_GENERAL), async (req, res, next) => {
   try {
-    const { category } = req.query;
+    const { category, includeCertificates } = req.query;
     const query = { kind: 'pdf' };
+    if (includeCertificates !== 'true') {
+      query.category = { $ne: 'certificate' };
+    }
     if (category) query.category = category;
 
     const docs = await MediaAsset.find(query)
-      .select('originalName category title size updatedAt')
+      .select('originalName category title metadata size createdAt updatedAt')
       .sort({ title: 1, originalName: 1 })
       .lean();
 
@@ -140,6 +143,7 @@ router.post(
       res.status(201).json({
         _id: mediaAsset._id,
         title: mediaAsset.title,
+        originalName: mediaAsset.originalName,
         category: mediaAsset.category,
         size: mediaAsset.size,
         kind: mediaAsset.kind,
@@ -175,6 +179,34 @@ router.delete(
       }
 
       res.json({ message: 'Media deleted', id: media._id });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * DELETE /api/media/name/:fileName
+ * Delete a media file by original file name
+ * Requires JWT authentication
+ */
+router.delete(
+  '/name/:fileName',
+  verifyToken,
+  async (req, res, next) => {
+    try {
+      const fileName = decodeURIComponent(req.params.fileName || '');
+      if (!fileName) {
+        return res.status(400).json({ error: 'Invalid file name' });
+      }
+
+      const media = await MediaAsset.findOneAndDelete({ originalName: fileName });
+
+      if (!media) {
+        return res.status(404).json({ error: 'Media not found' });
+      }
+
+      res.json({ message: 'Media deleted', fileName: media.originalName, id: media._id });
     } catch (error) {
       next(error);
     }

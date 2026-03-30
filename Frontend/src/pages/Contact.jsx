@@ -1,8 +1,10 @@
 import Navbar from "../components/Navbar";
 import SiteFooter from "../components/SiteFooter";
 import { FaPhone, FaEnvelope } from "react-icons/fa6";
+import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { getPublicSiteSettings } from "../utils/api";
 
 // Fix for default markers in react-leaflet
 import L from 'leaflet';
@@ -14,19 +16,41 @@ L.Icon.Default.mergeOptions({
 });
 
 export default function Contact() {
-  const contactInfo = {
+  const [contactInfo, setContactInfo] = useState({
     phone: "+91 82913 05959",
     email: "info@trikay.org",
     addressMain: "",
     addressSwapnalaya: "",
     addressSwayamsiddha: "",
-  };
+  });
+
   const swapnalayaLocation = {
     lat: 18.980835,
     lng: 73.1189057,
     address: "Swapnalaya children's home for girls, Old Panvel, Navi Mumbai - 410206",
     zoom: 15,
   };
+
+  useEffect(() => {
+    async function loadSiteSettings() {
+      try {
+        const response = await getPublicSiteSettings();
+        const settings = response.data || {};
+        setContactInfo((prev) => ({
+          ...prev,
+          phone: settings.contactPhone || prev.phone,
+          email: settings.contactEmail || prev.email,
+          addressMain: settings.contactAddress || prev.addressMain || swapnalayaLocation.address,
+          addressSwapnalaya: settings.contactAddressSwapnalaya || prev.addressSwapnalaya || swapnalayaLocation.address,
+          addressSwayamsiddha: settings.contactAddressSwayamsiddha || prev.addressSwayamsiddha,
+        }));
+      } catch (error) {
+        // Keep existing fallback values when settings are unavailable.
+      }
+    }
+
+    loadSiteSettings();
+  }, []);
 
   return (
     <>
@@ -83,7 +107,7 @@ export default function Contact() {
                   <Marker position={[swapnalayaLocation.lat, swapnalayaLocation.lng]}>
                     <Popup>
                       <strong>Swapnalaya</strong>
-                      <br />{swapnalayaLocation.address}
+                      <br />{contactInfo.addressSwapnalaya || swapnalayaLocation.address}
                       <br />{contactInfo.phone}
                       <br />{contactInfo.email}
                     </Popup>
@@ -93,10 +117,7 @@ export default function Contact() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-slate-100 p-5 text-center">
-            <h3 className="text-xl font-bold text-brand-heading">Social</h3>
-            <p className="caption-copy mt-2">Facebook / Instagram / YouTube / LinkedIn links are pending, as requested.</p>
-          </div>
+
         </section>
       </main>
 

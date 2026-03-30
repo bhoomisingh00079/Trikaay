@@ -1,12 +1,56 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
-import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
-import { apiUrl, mediaFileUrl } from "../utils/api";
+import { useEffect, useMemo, useState } from "react";
+import { SiFacebook, SiInstagram, SiX, SiYoutube, SiWhatsapp } from "react-icons/si";
+import { FaLinkedin } from "react-icons/fa";
+import { apiUrl, getPublicSiteSettings, mediaFileUrl } from "../utils/api";
 
 export default function SiteFooter({ showVolunteer = false }) {
   const [subscribeEmail, setSubscribeEmail] = useState('');
   const [subscribeStatus, setSubscribeStatus] = useState({ type: '', message: '' });
-  const linkClasses = "text-base text-brand-primary transition hover:text-blue-600";
+  const [socialLinks, setSocialLinks] = useState({
+    facebook: '',
+    instagram: '',
+    linkedin: '',
+    twitter: '',
+    youtube: '',
+    whatsapp: '',
+  });
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadSiteSettings() {
+      try {
+        const response = await getPublicSiteSettings();
+        const links = response?.data?.socialLinks || {};
+
+        if (mounted) {
+          setSocialLinks((prev) => ({ ...prev, ...links }));
+        }
+      } catch (error) {
+        // Keep placeholders if public settings are unavailable.
+      }
+    }
+
+    loadSiteSettings();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const socialItems = useMemo(
+    () => [
+      { key: 'facebook', label: 'Facebook', Icon: SiFacebook, href: socialLinks.facebook },
+      { key: 'instagram', label: 'Instagram', Icon: SiInstagram, href: socialLinks.instagram },
+      { key: 'linkedin', label: 'LinkedIn', Icon: FaLinkedin, href: socialLinks.linkedin },
+      { key: 'twitter', label: 'X (Twitter)', Icon: SiX, href: socialLinks.twitter },
+      { key: 'youtube', label: 'YouTube', Icon: SiYoutube, href: socialLinks.youtube },
+      { key: 'whatsapp', label: 'WhatsApp', Icon: SiWhatsapp, href: socialLinks.whatsapp },
+    ],
+    [socialLinks]
+  );
+
   const handleScrollToTop = () => {
     window.scrollTo(0, 0);
   };
@@ -104,31 +148,48 @@ export default function SiteFooter({ showVolunteer = false }) {
         </div>
       </section>
 
-      <div className="flex w-full items-center justify-center gap-6 border-t border-purple-300 bg-violet-200 px-4 py-3 text-2xl text-brand-primary">
-        <a
-          href=""
-          target="_blank"
-          rel="noreferrer"
-          className={`${linkClasses} text-2xl hover:scale-110 hover:text-blue-700`}
-        >
-          <FaFacebook />
-        </a>
-        <a
-          href=""
-          target="_blank"
-          rel="noreferrer"
-          className={`${linkClasses} text-2xl hover:scale-110 hover:text-blue-700`}
-        >
-          <FaInstagram />
-        </a>
-        <a
-          href=""
-          target="_blank"
-          rel="noreferrer"
-          className={`${linkClasses} text-2xl hover:scale-110 hover:text-blue-700`}
-        >
-          <FaYoutube />
-        </a>
+      <div className="border-t border-purple-300 bg-violet-200 px-4 py-4">
+        <div className="mx-auto flex w-full max-w-4xl flex-wrap items-center justify-center gap-5 text-3xl">
+          {socialItems.map(({ key, label, Icon, href }) => {
+            const hasUrl = Boolean((href || '').trim());
+            const colorByKey = {
+              facebook: 'text-[#1877F2]',
+              instagram: 'text-[#E4405F]',
+              linkedin: 'text-[#0A66C2]',
+              twitter: 'text-[#111827]',
+              youtube: 'text-[#FF0000]',
+              whatsapp: 'text-[#25D366]',
+            };
+
+            const colorClass = colorByKey[key] || 'text-blue-700';
+
+            if (!hasUrl) {
+              return (
+                <span
+                  key={key}
+                  title={`${label} link not set yet`}
+                  className="cursor-not-allowed opacity-50"
+                >
+                  <Icon className={colorClass} />
+                </span>
+              );
+            }
+
+            return (
+              <a
+                key={key}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                className="transition-transform hover:scale-110"
+                title={`Open ${label}`}
+                aria-label={label}
+              >
+                <Icon className={colorClass} />
+              </a>
+            );
+          })}
+        </div>
       </div>
 
       <div className="bg-black py-3 text-center text-sm text-white">

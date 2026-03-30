@@ -22,6 +22,27 @@ const mediaAssetSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    metadata: {
+      type: {
+        source: {
+          type: String,
+          default: 'manual',
+        },
+        docType: {
+          type: String,
+          default: '',
+        },
+        fiscalYear: {
+          type: String,
+          default: '',
+        },
+        keywords: [{
+          type: String,
+          trim: true,
+        }],
+      },
+      default: () => ({}),
+    },
     mimeType: {
       type: String,
       required: true,

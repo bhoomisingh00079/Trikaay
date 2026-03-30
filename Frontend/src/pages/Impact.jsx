@@ -3,6 +3,13 @@ import Navbar from "../components/Navbar";
 import SiteFooter from "../components/SiteFooter";
 import { apiUrl, mediaFileUrl } from "../utils/api";
 
+const HARD_CODED_REPORT = {
+  originalName: "TCCA Activity report Document (A4).pdf",
+  title: "TCCA Activity Report",
+  category: "project",
+  staticUrl: "/docs/TCCA%20Activity%20report%20Document%20(A4).pdf",
+};
+
 export default function Impact() {
   const [filter, setFilter] = useState("all");
   const [documents, setDocuments] = useState([]);
@@ -35,9 +42,15 @@ export default function Impact() {
     fetchDocuments();
   }, []);
 
+  const docsWithHardcoded = useMemo(() => {
+    const exists = documents.some((doc) => doc.originalName === HARD_CODED_REPORT.originalName);
+    if (exists) return documents;
+    return [HARD_CODED_REPORT, ...documents];
+  }, [documents]);
+
   const filteredDocs = useMemo(
-    () => (filter === "all" ? documents : documents.filter((doc) => doc.category === filter)),
-    [documents, filter]
+    () => (filter === "all" ? docsWithHardcoded : docsWithHardcoded.filter((doc) => doc.category === filter)),
+    [docsWithHardcoded, filter]
   );
 
   return (
@@ -87,7 +100,7 @@ export default function Impact() {
                 <h2 className="mb-3 font-bold text-brand-heading">{doc.title || doc.originalName}</h2>
 
                 <a
-                  href={mediaFileUrl(doc.originalName)}
+                  href={doc.staticUrl || mediaFileUrl(doc.originalName)}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-block rounded-full bg-blue-600 px-6 py-2 text-brand-inverse transition hover:scale-105 hover:shadow-lg"

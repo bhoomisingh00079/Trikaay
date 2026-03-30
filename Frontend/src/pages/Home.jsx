@@ -258,6 +258,7 @@ export default function Home() {
                 )}
               </form>
             </div>
+            
           </section>
 
           <section className="mt-[-20px] flex flex-col items-center gap-5 px-6 py-16 text-center">

@@ -9,6 +9,7 @@ const { body, validationResult } = require('express-validator');
 
 const TeamMember = require('../models/TeamMember');
 const Project = require('../models/Project');
+const SiteSettings = require('../models/SiteSettings');
 const { initializeGoogleAuth, appendVolunteerToSheet } = require('../utils/googleSheets');
 const { cacheControl, CACHE_DURATIONS } = require('../middleware/cacheControl');
 
@@ -34,8 +35,29 @@ router.get('/team', cacheControl(CACHE_DURATIONS.API_GENERAL), async (req, res, 
  */
 router.get('/projects', cacheControl(CACHE_DURATIONS.API_GENERAL), async (req, res, next) => {
   try {
-    const projects = await Project.find({ isVisible: true }).sort({ order: 1 });
+    const projects = await Project.find({ isVisible: true }).sort({ projectNumber: 1, order: 1 });
     res.json(projects);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/site-settings
+ * Get public site settings (contact + social links)
+ */
+router.get('/site-settings', cacheControl(CACHE_DURATIONS.API_GENERAL), async (req, res, next) => {
+  try {
+    const settings = await SiteSettings.getSingleton();
+
+    res.json({
+      contactPhone: settings.contactPhone || '',
+      contactEmail: settings.contactEmail || '',
+      contactAddress: settings.contactAddress || '',
+      contactAddressSwapnalaya: settings.contactAddressSwapnalaya || '',
+      contactAddressSwayamsiddha: settings.contactAddressSwayamsiddha || '',
+      socialLinks: settings.socialLinks || {},
+    });
   } catch (error) {
     next(error);
   }

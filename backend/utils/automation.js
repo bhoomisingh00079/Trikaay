@@ -8,9 +8,21 @@ const googleSheets = require('./googleSheets');
 const certificate = require('./certificate');
 const emailService = require('./emailService');
 const MediaAsset = require('../models/MediaAsset');
+const mongoose = require('mongoose');
 
 let isProcessing = false;
 let automationInterval = null;
+
+async function waitForMongoReady(timeoutMs = 15000) {
+    const startedAt = Date.now();
+
+    while (mongoose.connection.readyState !== 1) {
+        if (Date.now() - startedAt > timeoutMs) {
+            throw new Error(`MongoDB is not connected (readyState=${mongoose.connection.readyState})`);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+}
 
 /**
  * Process a single volunteer for certificate
@@ -58,6 +70,8 @@ async function processVolunteerCertificate(row, rowNumber, spreadsheetId) {
         // Determine certificate filename
         const safeName = name ? name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-]/g, '') : 'volunteer';
         const filename = `${certId}_${safeName}.pdf`;
+
+        await waitForMongoReady();
 
         let pdfBuffer;
         const existingAsset = await MediaAsset.findOne({ originalName: filename }).lean();
@@ -195,4 +209,5 @@ module.exports = {
     startAutomation,
     stopAutomation,
     runAutomation,
+    processVolunteerCertificate,
 };
