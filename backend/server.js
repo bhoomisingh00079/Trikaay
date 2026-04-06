@@ -133,9 +133,12 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Apply rate limiters
-app.use('/api/auth/', authLimiter);
-app.use('/api/', publicLimiter);
+// Apply rate limiters in production only.
+// In development, hot reloads and local testing can easily trigger false 429 responses.
+if (NODE_ENV === 'production') {
+  app.use('/api/auth/', authLimiter);
+  app.use('/api/', publicLimiter);
+}
 
 // ============================================
 // ROUTES SETUP
