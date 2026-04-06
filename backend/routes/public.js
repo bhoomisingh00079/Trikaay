@@ -55,7 +55,6 @@ router.get('/site-settings', cacheControl(CACHE_DURATIONS.API_GENERAL), async (r
       contactEmail: settings.contactEmail || '',
       contactAddress: settings.contactAddress || '',
       contactAddressSwapnalaya: settings.contactAddressSwapnalaya || '',
-      contactAddressSwayamsiddha: settings.contactAddressSwayamsiddha || '',
       socialLinks: settings.socialLinks || {},
     });
   } catch (error) {

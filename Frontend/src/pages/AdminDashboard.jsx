@@ -58,7 +58,6 @@ export default function AdminDashboard() {
     contactEmail: "",
     contactAddress: "",
     contactAddressSwapnalaya: "",
-    contactAddressSwayamsiddha: "",
   });
   const [socialForm, setSocialForm] = useState({
     facebook: "",
@@ -117,7 +116,6 @@ export default function AdminDashboard() {
       contactEmail: hydrated.contactEmail || "",
       contactAddress: hydrated.contactAddress || FALLBACK_ADDRESS,
       contactAddressSwapnalaya: hydrated.contactAddressSwapnalaya || "",
-      contactAddressSwayamsiddha: hydrated.contactAddressSwayamsiddha || "",
     });
 
     setSocialForm({
@@ -407,7 +405,6 @@ export default function AdminDashboard() {
         contactEmail: contactForm.contactEmail,
         contactAddress: contactForm.contactAddress,
         contactAddressSwapnalaya: contactForm.contactAddressSwapnalaya,
-        contactAddressSwayamsiddha: contactForm.contactAddressSwayamsiddha,
       });
       await refreshSiteSettings();
       alert("Contact settings updated.");
@@ -653,7 +650,6 @@ export default function AdminDashboard() {
                 <input className="w-full rounded border p-2" placeholder="Email address" value={contactForm.contactEmail} onChange={(e) => setContactForm((p) => ({ ...p, contactEmail: e.target.value }))} />
                 <textarea className="w-full rounded border p-2" rows={3} placeholder="Main address" value={contactForm.contactAddress} onChange={(e) => setContactForm((p) => ({ ...p, contactAddress: e.target.value }))} />
                 <textarea className="w-full rounded border p-2" rows={3} placeholder="Swapnalaya address" value={contactForm.contactAddressSwapnalaya} onChange={(e) => setContactForm((p) => ({ ...p, contactAddressSwapnalaya: e.target.value }))} />
-                <textarea className="w-full rounded border p-2" rows={3} placeholder="Swayamsiddha address" value={contactForm.contactAddressSwayamsiddha} onChange={(e) => setContactForm((p) => ({ ...p, contactAddressSwayamsiddha: e.target.value }))} />
                 <button disabled={settingsBusy} className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">{settingsBusy ? "Saving..." : "Save Contact"}</button>
               </form>
             </section>

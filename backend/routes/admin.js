@@ -512,7 +512,6 @@ router.patch(
     body('contactEmail').optional().trim().toLowerCase(),
     body('contactAddress').optional().trim(),
     body('contactAddressSwapnalaya').optional().trim(),
-    body('contactAddressSwayamsiddha').optional().trim(),
     body('socialLinks').optional().isObject(),
     body('socialLinks.facebook').optional().trim(),
     body('socialLinks.instagram').optional().trim(),
@@ -544,9 +543,6 @@ router.patch(
       }
       if (Object.prototype.hasOwnProperty.call(req.body, 'contactAddressSwapnalaya')) {
         settings.contactAddressSwapnalaya = req.body.contactAddressSwapnalaya;
-      }
-      if (Object.prototype.hasOwnProperty.call(req.body, 'contactAddressSwayamsiddha')) {
-        settings.contactAddressSwayamsiddha = req.body.contactAddressSwayamsiddha;
       }
       if (req.body.socialLinks && typeof req.body.socialLinks === 'object') {
         settings.socialLinks = {

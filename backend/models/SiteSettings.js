@@ -28,11 +28,6 @@ const siteSettingsSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
-    contactAddressSwayamsiddha: {
-      type: String,
-      default: '',
-      trim: true,
-    },
     socialLinks: {
       facebook: {
         type: String,
@@ -86,9 +81,6 @@ siteSettingsSchema.pre('save', function (next) {
     if (this.isModified('contactAddressSwapnalaya')) {
       this.contactAddressSwapnalaya = encrypt(this.contactAddressSwapnalaya);
     }
-    if (this.isModified('contactAddressSwayamsiddha')) {
-      this.contactAddressSwayamsiddha = encrypt(this.contactAddressSwayamsiddha);
-    }
     next();
   } catch (error) {
     next(error);
@@ -108,7 +100,6 @@ siteSettingsSchema.post('find', function (docs) {
           doc.contactEmail = decrypt(doc.contactEmail);
           doc.contactAddress = decrypt(doc.contactAddress);
           doc.contactAddressSwapnalaya = decrypt(doc.contactAddressSwapnalaya);
-          doc.contactAddressSwayamsiddha = decrypt(doc.contactAddressSwayamsiddha);
         }
       });
     }
@@ -127,7 +118,6 @@ siteSettingsSchema.post('findOne', function (doc) {
       doc.contactEmail = decrypt(doc.contactEmail);
       doc.contactAddress = decrypt(doc.contactAddress);
       doc.contactAddressSwapnalaya = decrypt(doc.contactAddressSwapnalaya);
-      doc.contactAddressSwayamsiddha = decrypt(doc.contactAddressSwayamsiddha);
     }
   } catch (error) {
     console.error('Decryption error in post-findOne hook:', error);
@@ -144,7 +134,6 @@ siteSettingsSchema.post('findOneAndUpdate', function (doc) {
       doc.contactEmail = decrypt(doc.contactEmail);
       doc.contactAddress = decrypt(doc.contactAddress);
       doc.contactAddressSwapnalaya = decrypt(doc.contactAddressSwapnalaya);
-      doc.contactAddressSwayamsiddha = decrypt(doc.contactAddressSwayamsiddha);
     }
   } catch (error) {
     console.error('Decryption error in post-findOneAndUpdate hook:', error);

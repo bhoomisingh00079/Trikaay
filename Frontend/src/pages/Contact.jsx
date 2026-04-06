@@ -21,7 +21,6 @@ export default function Contact() {
     email: "info@trikay.org",
     addressMain: "",
     addressSwapnalaya: "",
-    addressSwayamsiddha: "",
   });
 
   const swapnalayaLocation = {
@@ -42,7 +41,6 @@ export default function Contact() {
           email: settings.contactEmail || prev.email,
           addressMain: settings.contactAddress || prev.addressMain || swapnalayaLocation.address,
           addressSwapnalaya: settings.contactAddressSwapnalaya || prev.addressSwapnalaya || swapnalayaLocation.address,
-          addressSwayamsiddha: settings.contactAddressSwayamsiddha || prev.addressSwayamsiddha,
         }));
       } catch (error) {
         // Keep existing fallback values when settings are unavailable.
@@ -73,11 +71,6 @@ export default function Contact() {
               <div>
                 <h2 className="text-2xl font-bold text-brand-heading">Swapnalaya Address</h2>
                 <p className="mt-2 whitespace-pre-line">{contactInfo.addressSwapnalaya || "Address not configured"}</p>
-              </div>
-
-              <div>
-                <h2 className="text-2xl font-bold text-brand-heading">Swayamsiddha Address</h2>
-                <p className="mt-2 whitespace-pre-line">{contactInfo.addressSwayamsiddha || "Address not configured"}</p>
               </div>
 
               <div className="rounded-xl bg-white p-4">
