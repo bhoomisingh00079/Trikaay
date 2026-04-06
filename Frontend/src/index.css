@@ -120,5 +120,145 @@
 }
 
 .support-bg {
-  background: linear-gradient(180deg, #ffffff 0%, #a9caff 50%, #b8cbff 100%);
+  @apply bg-gradient-to-b from-white via-[#a9caff] to-[#b8cbff];
+}
+
+/* ================================
+   NAVBAR HEADER
+   ================================ */
+@layer components {
+  .navbar-header {
+    @apply sticky top-0 z-[1001] bg-gradient-to-br from-[#6b3fa0] to-[#9b59b6] px-4 md:px-10 transition-shadow duration-300;
+    box-shadow: none;
+  }
+
+  .navbar-header.navbar-scrolled {
+    @apply shadow-[0_2px_12px_rgba(0,0,0,0.18)];
+  }
+
+  /* ================================
+     DESKTOP NAVIGATION LINKS
+     ================================ */
+  .nav-link {
+    @apply relative text-base font-medium tracking-[0.01em] text-white no-underline transition-colors duration-200 pb-0.5;
+  }
+
+  /* Underline animation on hover */
+  .nav-link::after {
+    @apply absolute bottom-[-2px] left-0 w-full h-[3px] bg-white rounded-sm;
+    content: "";
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s ease;
+  }
+
+  .nav-link:hover::after {
+    transform: scaleX(1);
+  }
+
+  .nav-link--active::after {
+    @apply bg-white;
+    transform: scaleX(1);
+  }
+
+  /* ================================
+     DROPDOWN MENU
+     ================================ */
+  .nav-dropdown-group {
+    @apply relative inline-block;
+  }
+
+  .nav-dropdown {
+    @apply absolute top-full left-0 mt-2 w-56 bg-white rounded-xl p-2 shadow-[0_12px_24px_rgba(15,23,42,0.14)] z-[1002];
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: all 0.2s ease;
+  }
+
+  .nav-dropdown-group:hover .nav-dropdown {
+    @apply opacity-100 visible;
+    transform: translateY(0);
+  }
+
+  .nav-dropdown-group:focus-within .nav-dropdown {
+    @apply opacity-100 visible;
+    transform: translateY(0);
+  }
+
+  .nav-dropdown-link {
+    @apply block py-2 px-3 text-sm font-medium text-slate-900 no-underline rounded-lg transition-all duration-150 hover:bg-blue-100 hover:text-blue-700;
+  }
+
+  .nav-dropdown-link--active {
+    @apply bg-blue-50 text-blue-700 font-semibold;
+  }
+
+  /* ================================
+     LOGIN BUTTON
+     ================================ */
+  .login-btn {
+    @apply flex items-center gap-2 bg-blue-500 text-white font-medium py-2 px-4 rounded-full border-none cursor-pointer transition-all duration-200 whitespace-nowrap text-base hover:bg-blue-600 hover:shadow-[0_4px_12px_rgba(59,130,246,0.3)];
+  }
+
+  .login-btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .login-btn:active {
+    transform: translateY(0);
+  }
+
+  /* ================================
+     MOBILE NAVIGATION MENU
+     ================================ */
+  .mobile-menu {
+    @apply bg-[#6b3fa0] max-h-0 overflow-hidden transition-all duration-300 border-t border-white/10;
+  }
+
+  .mobile-menu--open {
+    @apply max-h-[500px];
+  }
+
+  .mobile-menu-content {
+    @apply flex flex-col p-4 gap-0;
+  }
+
+  .mobile-nav-link {
+    @apply py-3.5 text-base font-medium tracking-[0.01em] text-white no-underline border-b border-white/10 transition-all duration-200 relative block hover:bg-white/5;
+  }
+
+  .mobile-nav-link:last-of-type:not(.login-btn) {
+    @apply border-b-0;
+  }
+
+  .mobile-nav-link::before {
+    @apply absolute left-0 bottom-0 w-[3px] h-full bg-white;
+    content: "";
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s ease;
+  }
+
+  .mobile-nav-link:hover::before {
+    transform: scaleX(1);
+  }
+
+  .mobile-nav-link--active::before {
+    @apply bg-white;
+    transform: scaleX(1);
+  }
+
+  .mobile-menu .login-btn {
+    @apply w-full justify-center mt-2 border-t border-white/10 pt-4 pb-2;
+  }
+
+  /* ================================
+     RESPONSIVE ADJUSTMENTS
+     ================================ */
+  @media (max-width: 1024px) {
+    .nav-link {
+      @apply text-sm gap-4;
+    }
+  }
 }

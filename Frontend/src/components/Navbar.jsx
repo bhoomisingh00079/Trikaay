@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { FaLock } from 'react-icons/fa';
+import { FaLock, FaBars, FaTimes } from 'react-icons/fa';
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import LoginModal from "./LoginModal";
@@ -7,12 +7,31 @@ import { mediaFileUrl } from "../utils/api";
 
 export default function Navbar() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Handle scroll effect
+  const handleScroll = () => {
+    setIsScrolled(window.scrollY > 0);
+  };
+
+  if (typeof window !== "undefined") {
+    window.addEventListener("scroll", handleScroll, { passive: true });
+  }
+
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
   return (
-    <header className="sticky top-0 z-[1001] bg-gradient-to-br from-[#6b3fa0] to-[#9b59b6] px-4 py-2 text-white shadow md:px-10">
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <Link to="/" className="flex items-center gap-2">
+    <header
+      className={`navbar-header sticky top-0 z-[1001] bg-gradient-to-br from-[#6b3fa0] to-[#9b59b6] px-4 md:px-10 transition-shadow duration-300 ${
+        isScrolled ? "navbar-scrolled" : ""
+      }`}
+    >
+      <div className="mx-auto flex max-w-7xl items-center justify-between py-4">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2 flex-shrink-0">
           <img
             src={mediaFileUrl("LOGO.jpeg")}
             alt="Trikay Care And Creation Association logo"
@@ -22,38 +41,35 @@ export default function Navbar() {
           <span className="sr-only">Trikay Care And Creation Association</span>
         </Link>
 
-        <nav className="flex flex-wrap items-center gap-3 text-sm md:gap-5 md:text-base">
+        {/* Desktop Navigation */}
+        <nav className="hidden lg:flex items-center gap-8">
           <NavLink
             to="/"
             end
             className={({ isActive }) =>
-              isActive
-                ? "rounded-full bg-blue-700 px-5 py-2 font-medium text-white transition"
-                : "rounded-full px-5 py-2 font-medium text-white transition hover:bg-blue-700"
+              `nav-link ${isActive ? "nav-link--active" : ""}`
             }
           >
             Home
           </NavLink>
 
-          <div className="group relative">
+          <div className="nav-dropdown-group">
             <NavLink
               to="/about"
               className={({ isActive }) =>
-                isActive
-                  ? "rounded-full bg-blue-700 px-5 py-2 font-medium text-white transition"
-                  : "rounded-full px-5 py-2 font-medium text-white transition hover:bg-blue-700"
+                `nav-link ${isActive ? "nav-link--active" : ""}`
               }
             >
               Our Organization
             </NavLink>
 
-            <div className="invisible absolute left-0 top-full z-[1002] mt-2 w-56 rounded-xl bg-white p-2 opacity-0 shadow-[0_12px_24px_rgba(15,23,42,0.14)] transition-all duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+            <div className="nav-dropdown">
               <NavLink
                 to="/about"
                 className={({ isActive }) =>
                   isActive
-                    ? "block rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700"
-                    : "block rounded-lg px-3 py-2 text-sm font-medium text-blue-900 hover:bg-blue-50 hover:text-blue-700"
+                    ? "nav-dropdown-link nav-dropdown-link--active"
+                    : "nav-dropdown-link"
                 }
               >
                 About Organization
@@ -62,8 +78,8 @@ export default function Navbar() {
                 to="/our-team"
                 className={({ isActive }) =>
                   isActive
-                    ? "block rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700"
-                    : "block rounded-lg px-3 py-2 text-sm font-medium text-blue-900 hover:bg-blue-50 hover:text-blue-700"
+                    ? "nav-dropdown-link nav-dropdown-link--active"
+                    : "nav-dropdown-link"
                 }
               >
                 Our Team
@@ -72,8 +88,8 @@ export default function Navbar() {
                 to="/what-we-do"
                 className={({ isActive }) =>
                   isActive
-                    ? "block rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700"
-                    : "block rounded-lg px-3 py-2 text-sm font-medium text-blue-900 hover:bg-blue-50 hover:text-blue-700"
+                    ? "nav-dropdown-link nav-dropdown-link--active"
+                    : "nav-dropdown-link"
                 }
               >
                 What We Do
@@ -84,45 +100,40 @@ export default function Navbar() {
           <NavLink
             to="/support"
             className={({ isActive }) =>
-              isActive
-                ? "rounded-full bg-blue-700 px-5 py-2 font-medium text-white transition"
-                : "rounded-full px-5 py-2 font-medium text-white transition hover:bg-blue-700"
+              `nav-link ${isActive ? "nav-link--active" : ""}`
             }
           >
             Support Us
           </NavLink>
+
           <NavLink
             to="/volunteers"
             className={({ isActive }) =>
-              isActive
-                ? "rounded-full bg-blue-700 px-5 py-2 font-medium text-white transition"
-                : "rounded-full px-5 py-2 font-medium text-white transition hover:bg-blue-700"
+              `nav-link ${isActive ? "nav-link--active" : ""}`
             }
           >
             Volunteers
           </NavLink>
+
           <NavLink
             to="/contact"
             className={({ isActive }) =>
-              isActive
-                ? "rounded-full bg-blue-700 px-5 py-2 font-medium text-white transition"
-                : "rounded-full px-5 py-2 font-medium text-white transition hover:bg-blue-700"
+              `nav-link ${isActive ? "nav-link--active" : ""}`
             }
           >
             Contact Us
           </NavLink>
+
           <NavLink
             to="/impact"
             className={({ isActive }) =>
-              isActive
-                ? "rounded-full bg-blue-700 px-5 py-2 font-medium text-white transition"
-                : "rounded-full px-5 py-2 font-medium text-white transition hover:bg-blue-700"
+              `nav-link ${isActive ? "nav-link--active" : ""}`
             }
           >
             Impact Report
           </NavLink>
 
-          {/* Admin Lock Icon */}
+          {/* Login Button */}
           <button
             onClick={() => {
               if (isAuthenticated) {
@@ -131,14 +142,127 @@ export default function Navbar() {
                 setIsModalOpen(true);
               }
             }}
-            className="ml-2 flex items-center gap-2 rounded-full bg-blue-500 px-4 py-2 font-medium text-white transition hover:bg-blue-600"
+            className="login-btn"
             title={isAuthenticated ? "Go to Admin Panel" : "Admin Login"}
           >
             <FaLock size={16} />
             Login
           </button>
         </nav>
+
+        {/* Mobile Menu Toggle */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="lg:hidden text-white text-2xl transition-colors duration-200 hover:opacity-80"
+          aria-label="Toggle mobile menu"
+        >
+          {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
+        </button>
       </div>
+
+      {/* Mobile Navigation Menu */}
+      <nav
+        className={`mobile-menu ${isMobileMenuOpen ? "mobile-menu--open" : ""}`}
+      >
+        <div className="mobile-menu-content">
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) =>
+              `mobile-nav-link ${isActive ? "mobile-nav-link--active" : ""}`
+            }
+            onClick={closeMobileMenu}
+          >
+            Home
+          </NavLink>
+
+          <NavLink
+            to="/about"
+            className={({ isActive }) =>
+              `mobile-nav-link ${isActive ? "mobile-nav-link--active" : ""}`
+            }
+            onClick={closeMobileMenu}
+          >
+            Our Organization
+          </NavLink>
+
+          <NavLink
+            to="/our-team"
+            className={({ isActive }) =>
+              `mobile-nav-link ${isActive ? "mobile-nav-link--active" : ""}`
+            }
+            onClick={closeMobileMenu}
+          >
+            Our Team
+          </NavLink>
+
+          <NavLink
+            to="/what-we-do"
+            className={({ isActive }) =>
+              `mobile-nav-link ${isActive ? "mobile-nav-link--active" : ""}`
+            }
+            onClick={closeMobileMenu}
+          >
+            What We Do
+          </NavLink>
+
+          <NavLink
+            to="/support"
+            className={({ isActive }) =>
+              `mobile-nav-link ${isActive ? "mobile-nav-link--active" : ""}`
+            }
+            onClick={closeMobileMenu}
+          >
+            Support Us
+          </NavLink>
+
+          <NavLink
+            to="/volunteers"
+            className={({ isActive }) =>
+              `mobile-nav-link ${isActive ? "mobile-nav-link--active" : ""}`
+            }
+            onClick={closeMobileMenu}
+          >
+            Volunteers
+          </NavLink>
+
+          <NavLink
+            to="/contact"
+            className={({ isActive }) =>
+              `mobile-nav-link ${isActive ? "mobile-nav-link--active" : ""}`
+            }
+            onClick={closeMobileMenu}
+          >
+            Contact Us
+          </NavLink>
+
+          <NavLink
+            to="/impact"
+            className={({ isActive }) =>
+              `mobile-nav-link ${isActive ? "mobile-nav-link--active" : ""}`
+            }
+            onClick={closeMobileMenu}
+          >
+            Impact Report
+          </NavLink>
+
+          <button
+            onClick={() => {
+              if (isAuthenticated) {
+                navigate('/admin');
+              } else {
+                setIsModalOpen(true);
+              }
+              closeMobileMenu();
+            }}
+            className="login-btn w-full justify-center mt-2"
+            title={isAuthenticated ? "Go to Admin Panel" : "Admin Login"}
+          >
+            <FaLock size={16} />
+            Login
+          </button>
+        </div>
+      </nav>
 
       {/* Login Modal */}
       <LoginModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
