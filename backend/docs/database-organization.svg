@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="760" viewBox="0 0 1180 760" role="img" aria-labelledby="title desc">
+  <title id="title">Simple Trikaay Database Diagram</title>
+  <desc id="desc">Simple hierarchy of MongoDB, database, model folder, and collections.</desc>
+
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 28px 'Segoe UI', Tahoma, sans-serif; fill: #0f172a; }
+      .sub { font: 500 14px 'Segoe UI', Tahoma, sans-serif; fill: #475569; }
+      .box { fill: #ffffff; stroke: #1e293b; stroke-width: 2; rx: 10; }
+      .head { fill: #0f766e; }
+      .text-head { font: 700 17px 'Segoe UI', Tahoma, sans-serif; fill: #ffffff; }
+      .text { font: 600 15px 'Segoe UI', Tahoma, sans-serif; fill: #0f172a; }
+      .item { font: 500 14px 'Consolas', 'Courier New', monospace; fill: #111827; }
+      .line { stroke: #334155; stroke-width: 2; fill: none; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1180" height="760" />
+  <text class="title" x="30" y="48">Trikaay - Simple Database Diagram</text>
+  <text class="sub" x="30" y="72">MongoDB -> Database -> Folder -> Collections</text>
+
+  <rect class="box" x="30" y="120" width="250" height="80" />
+  <rect class="head" x="30" y="120" width="250" height="36" rx="10" />
+  <text class="text-head" x="48" y="144">MongoDB</text>
+  <text class="text" x="48" y="178">Cluster / Server</text>
+
+  <rect class="box" x="340" y="120" width="250" height="80" />
+  <rect class="head" x="340" y="120" width="250" height="36" rx="10" />
+  <text class="text-head" x="358" y="144">Database</text>
+  <text class="text" x="358" y="178">trikaay</text>
+
+  <rect class="box" x="650" y="120" width="470" height="80" />
+  <rect class="head" x="650" y="120" width="470" height="36" rx="10" />
+  <text class="text-head" x="668" y="144">App Folder (Models)</text>
+  <text class="text" x="668" y="178">backend/models</text>
+
+  <path class="line" d="M 280 160 L 340 160" />
+  <path class="line" d="M 590 160 L 650 160" />
+
+  <rect class="box" x="650" y="240" width="470" height="430" />
+  <rect class="head" x="650" y="240" width="470" height="36" rx="10" />
+  <text class="text-head" x="668" y="264">Collections in trikaay</text>
+
+  <text class="item" x="675" y="315">- adminusers: admin login credentials</text>
+  <text class="item" x="675" y="355">- projects: project details and visibility</text>
+  <text class="item" x="675" y="395">- mediaassets: images and pdf files</text>
+  <text class="item" x="675" y="435">- teammembers: team profiles and roles</text>
+  <text class="item" x="675" y="475">- sitesettings: contact info + social links</text>
+
+  <text class="sub" x="675" y="535">Mapped from Mongoose models:</text>
+  <text class="item" x="675" y="570">AdminUser, Project, MediaAsset,</text>
+  <text class="item" x="675" y="605">TeamMember, SiteSettings</text>
+
+  <path class="line" d="M 885 200 L 885 240" />
+
+  <text class="sub" x="30" y="735">Simple view only (no field-level details).</text>
+</svg>
