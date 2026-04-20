@@ -13,9 +13,10 @@ const drive = google.drive('v3');
 // Target Google Sheet tab name (space-safe quoted when needed)
 const SHEET_TAB = process.env.SHEET_TAB || process.env.SHEET_NAME || 'Volunteer Registrations';
 
-function getSheetRange(subRange) {
-    const needsQuotes = /\s|[^A-Za-z0-9_]/.test(SHEET_TAB);
-    const tabName = needsQuotes ? `'${SHEET_TAB.replace(/'/g, "\\'")}'` : SHEET_TAB;
+function getSheetRange(subRange, tabOverride) {
+    const tab = tabOverride || process.env.VOLUNTEERS_SHEET_TAB || SHEET_TAB;
+    const needsQuotes = /\s|[^A-Za-z0-9_]/.test(tab);
+    const tabName = needsQuotes ? `'${String(tab).replace(/'/g, "\\'")}'` : tab;
     return `${tabName}!${subRange}`;
 }
 
@@ -49,7 +50,7 @@ async function initializeGoogleAuth() {
  * @param {Object} volunteerData - Volunteer registration data
  * @returns {Promise<Object>} - Response from Google Sheets API
  */
-async function appendVolunteerToSheet(spreadsheetId, volunteerData) {
+async function appendVolunteerToSheet(spreadsheetId, volunteerData, tabName) {
     try {
         if (!auth) {
             throw new Error('Google auth not initialized');
@@ -75,7 +76,7 @@ async function appendVolunteerToSheet(spreadsheetId, volunteerData) {
             values: values,
         };
 
-        const sheetRange = getSheetRange('A2');
+        const sheetRange = getSheetRange('A2', tabName);
         console.log(`📝 Appending to sheet - Range: ${sheetRange}`);
 
         const response = await sheets.spreadsheets.values.append({
@@ -100,7 +101,7 @@ async function appendVolunteerToSheet(spreadsheetId, volunteerData) {
  * @param {string} spreadsheetId - The spreadsheet ID
  * @returns {Promise<Array>} - Array of row data
  */
-async function getAllRows(spreadsheetId) {
+async function getAllRows(spreadsheetId, tabName) {
     try {
         if (!auth) {
             throw new Error('Google auth not initialized');
@@ -109,7 +110,7 @@ async function getAllRows(spreadsheetId) {
         const response = await sheets.spreadsheets.values.get({
             auth: auth,
             spreadsheetId: spreadsheetId,
-            range: getSheetRange('A:J'), // Get all rows and columns A-J (including registration date)
+            range: getSheetRange('A:J', tabName), // Get all rows and columns A-J (including registration date)
         });
 
         const rows = response.data.values || [];
@@ -128,7 +129,7 @@ async function getAllRows(spreadsheetId) {
  * @param {string} value - Value to set
  * @returns {Promise<Object>} - Response from Google Sheets API
  */
-async function updateCell(spreadsheetId, rowIndex, colIndex, value) {
+async function updateCell(spreadsheetId, rowIndex, colIndex, value, tabName) {
     try {
         if (!auth) {
             throw new Error('Google auth not initialized');
@@ -141,7 +142,7 @@ async function updateCell(spreadsheetId, rowIndex, colIndex, value) {
         const response = await sheets.spreadsheets.values.update({
             auth: auth,
             spreadsheetId: spreadsheetId,
-            range: getSheetRange(cellAddress),
+            range: getSheetRange(cellAddress, tabName),
             valueInputOption: 'RAW',
             resource: {
                 values: [[value]],
@@ -161,7 +162,7 @@ async function updateCell(spreadsheetId, rowIndex, colIndex, value) {
  * @param {string} spreadsheetId - The spreadsheet ID
  * @returns {Promise<Array>} - Array of rows matching criteria
  */
-async function getRow(spreadsheetId, rowNumber) {
+async function getRow(spreadsheetId, rowNumber, tabName) {
     try {
         if (!auth) {
             throw new Error('Google auth not initialized');
@@ -169,7 +170,7 @@ async function getRow(spreadsheetId, rowNumber) {
         const response = await sheets.spreadsheets.values.get({
             auth: auth,
             spreadsheetId: spreadsheetId,
-            range: getSheetRange(`A${rowNumber}:J${rowNumber}`),
+            range: getSheetRange(`A${rowNumber}:J${rowNumber}`, tabName),
         });
         return response.data.values?.[0] || [];
     } catch (error) {
@@ -178,9 +179,9 @@ async function getRow(spreadsheetId, rowNumber) {
     }
 }
 
-async function findPendingCertificates(spreadsheetId) {
+async function findPendingCertificates(spreadsheetId, tabName) {
     try {
-        const rows = await getAllRows(spreadsheetId);
+        const rows = await getAllRows(spreadsheetId, tabName);
 
         if (rows.length < 2) {
             return []; // No data rows

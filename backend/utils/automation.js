@@ -29,12 +29,13 @@ async function waitForMongoReady(timeoutMs = 15000) {
  * @param {Object} row - Row data from Google Sheets
  * @param {number} rowNumber - Row number in spreadsheet
  * @param {string} spreadsheetId - Google Sheets ID
+ * @param {string} [sheetTab] - Google Sheets tab name override
  * @returns {Promise<boolean>} - True if successfully processed
  */
-async function processVolunteerCertificate(row, rowNumber, spreadsheetId) {
+async function processVolunteerCertificate(row, rowNumber, spreadsheetId, sheetTab) {
     try {
         // Re-read row to avoid race conditions
-        const currentRow = await googleSheets.getRow(spreadsheetId, rowNumber);
+        const currentRow = await googleSheets.getRow(spreadsheetId, rowNumber, sheetTab);
         const name = currentRow[0];
         const phone = currentRow[1];
         const email = currentRow[2];
@@ -61,10 +62,10 @@ async function processVolunteerCertificate(row, rowNumber, spreadsheetId) {
         if (!certId) {
             certId = certificate.generateCertificateId();
             console.log(`   Assigned Certificate ID: ${certId}`);
-            await googleSheets.updateCell(spreadsheetId, rowNumber, 7, certId); // Column H
+            await googleSheets.updateCell(spreadsheetId, rowNumber, 7, certId, sheetTab); // Column H
 
             // Optionally mark processing status so it doesn't get picked up by another round
-            await googleSheets.updateCell(spreadsheetId, rowNumber, 6, 'Processing'); // Column G
+            await googleSheets.updateCell(spreadsheetId, rowNumber, 6, 'Processing', sheetTab); // Column G
         }
 
         // Determine certificate filename
@@ -113,7 +114,7 @@ async function processVolunteerCertificate(row, rowNumber, spreadsheetId) {
         });
 
         // Update status to Completed
-        await googleSheets.updateCell(spreadsheetId, rowNumber, 6, 'Completed'); // Column G
+        await googleSheets.updateCell(spreadsheetId, rowNumber, 6, 'Completed', sheetTab); // Column G
 
         console.log(`✓ Certificate sent to ${email} with ID ${certId}`);
         return true;
@@ -121,7 +122,7 @@ async function processVolunteerCertificate(row, rowNumber, spreadsheetId) {
         console.error(`✗ Error processing volunteer certificate:`, error.message);
         // If error happens after assigning certId, keep row in Approved for retry
         try {
-            await googleSheets.updateCell(spreadsheetId, rowNumber, 6, 'Approved');
+            await googleSheets.updateCell(spreadsheetId, rowNumber, 6, 'Approved', sheetTab);
         } catch (innerError) {
             console.warn('⚠ Could not revert status after error:', innerError.message);
         }

@@ -431,17 +431,17 @@ export default function AdminDashboard() {
 
   async function handleApproveVolunteer(row) {
     const statusKey = getStatusKey(row);
-    const rowIndex = row.rowIndex;
+    const rowNumber = row.rowNumber || row.rowIndex;
     const previous = [...volunteers];
 
     setVolunteers((curr) =>
       curr.map((item) =>
-        item.rowIndex === rowIndex ? { ...item, [statusKey]: "Approved" } : item
+        (item.rowNumber || item.rowIndex) === rowNumber ? { ...item, [statusKey]: "Approved" } : item
       )
     );
 
     try {
-      await approveVolunteer(rowIndex);
+      await approveVolunteer(rowNumber);
     } catch (err) {
       setVolunteers(previous);
       alert(err?.response?.data?.error || "Approval failed.");
@@ -711,10 +711,10 @@ export default function AdminDashboard() {
                         const normalized = String(row[statusKey] || "").toLowerCase();
                         const isApproved = normalized === "approved" || normalized === "completed";
                         return (
-                          <tr key={row.rowIndex}>
+                          <tr key={row.rowNumber || row.rowIndex}>
                             {volunteerColumns.map((col) => <td key={col} className="border-b p-2">{String(row[col] || "")}</td>)}
                             <td className="border-b p-2">
-                              <button disabled={isApproved} onClick={() => handleApproveVolunteer(row)} className={`rounded px-3 py-1 text-xs ${isApproved ? "bg-gray-200 text-gray-600" : "bg-green-600 text-white"}`}>
+                              <button disabled={isApproved || !(row.rowNumber || row.rowIndex)} onClick={() => handleApproveVolunteer(row)} className={`rounded px-3 py-1 text-xs ${isApproved ? "bg-gray-200 text-gray-600" : "bg-green-600 text-white"}`}>
                                 {isApproved ? "Approved" : "Approve"}
                               </button>
                             </td>

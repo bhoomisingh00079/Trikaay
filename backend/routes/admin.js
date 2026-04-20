@@ -587,18 +587,10 @@ router.get('/sheets/volunteers', async (req, res, next) => {
       });
 
       const rows = response.data.values || [];
-      if (rows.length === 0) {
-        return [];
-      }
-
-      const headers = rows[0];
-      return rows.slice(1).reverse().map((row, index) => {
-        const obj = { rowIndex: index + 1 };
-        headers.forEach((header, col) => {
-          obj[header] = row[col] || '';
-        });
-        return obj;
-      });
+      return mapSheetRows(
+        rows,
+        ['Name', 'Phone', 'Email', 'Position', 'Experience', 'Availability', 'Status', 'Certificate ID']
+      ).reverse();
     });
 
     res.json(data);
@@ -754,12 +746,13 @@ router.patch(
       const { rowIndex } = req.params;
       const { status } = req.body;
       const volunteerTab = await resolveSheetTab(process.env.GOOGLE_SHEET_ID, VOLUNTEER_TAB_CANDIDATES);
+      const rowNumber = Number.parseInt(rowIndex, 10);
 
       // Update status column (column G = index 6)
       if (status) {
         await sheets.spreadsheets.values.update({
           spreadsheetId: process.env.GOOGLE_SHEET_ID,
-          range: toSheetRange(volunteerTab, `G${Number.parseInt(rowIndex, 10) + 1}`), // +1 for header row
+          range: toSheetRange(volunteerTab, `G${rowNumber}`),
           valueInputOption: 'USER_ENTERED',
           requestBody: {
             values: [[status]],
@@ -799,7 +792,7 @@ router.post(
       const { rowIndex } = req.params;
       const sheetId = process.env.GOOGLE_SHEET_ID;
       const volunteerTab = await resolveSheetTab(sheetId, VOLUNTEER_TAB_CANDIDATES);
-      const actualRowNumber = Number.parseInt(rowIndex, 10) + 1; // +1 for header row
+      const actualRowNumber = Number.parseInt(rowIndex, 10);
 
       // 1. Update status column (G) to Approved.
       await sheets.spreadsheets.values.update({
@@ -813,7 +806,7 @@ router.post(
 
       // 2. Immediately trigger certificate generation + Mongo persistence + email send.
       await ensureAutomationServicesReady();
-      const processed = await processVolunteerCertificate([], actualRowNumber, sheetId);
+      const processed = await processVolunteerCertificate([], actualRowNumber, sheetId, volunteerTab);
 
       if (!processed) {
         return res.status(500).json({
@@ -860,7 +853,7 @@ router.post(
       const { rowIndex } = req.params;
       const sheetId = process.env.GOOGLE_SHEET_ID;
       const volunteerTab = await resolveSheetTab(sheetId, VOLUNTEER_TAB_CANDIDATES);
-      const actualRowNumber = Number.parseInt(rowIndex, 10) + 1;
+      const actualRowNumber = Number.parseInt(rowIndex, 10);
 
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
@@ -872,7 +865,7 @@ router.post(
       });
 
       await ensureAutomationServicesReady();
-      const processed = await processVolunteerCertificate([], actualRowNumber, sheetId);
+      const processed = await processVolunteerCertificate([], actualRowNumber, sheetId, volunteerTab);
 
       if (!processed) {
         return res.status(500).json({
