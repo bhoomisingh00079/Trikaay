@@ -92,8 +92,6 @@ async function resolveSheetTab(spreadsheetId, candidates) {
 }
 
 async function ensureAutomationServicesReady() {
-  if (automationServicesReady) return;
-
   const emailUser = process.env.EMAIL_USER;
   const emailPassword = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS;
 
@@ -101,9 +99,14 @@ async function ensureAutomationServicesReady() {
     throw new Error('Email service credentials are not configured (EMAIL_USER and EMAIL_PASSWORD/EMAIL_PASS required)');
   }
 
-  await initializeGoogleAuth();
-  await initializeEmailService(emailUser, emailPassword);
-  automationServicesReady = true;
+  try {
+    await initializeGoogleAuth();
+    await initializeEmailService(emailUser, emailPassword);
+    automationServicesReady = true;
+  } catch (err) {
+    automationServicesReady = false;
+    throw err;
+  }
 }
 
 function looksLikeHeaderRow(rowValues, expectedHeaders) {
@@ -794,7 +797,7 @@ router.post(
       const volunteerTab = await resolveSheetTab(sheetId, VOLUNTEER_TAB_CANDIDATES);
       const actualRowNumber = Number.parseInt(rowIndex, 10);
 
-      // 1. Update status column (G) to Approved.
+      // 1. Update status column (G) to Approved — this must always succeed.
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
         range: toSheetRange(volunteerTab, `G${actualRowNumber}`),
@@ -804,25 +807,36 @@ router.post(
         },
       });
 
-      // 2. Immediately trigger certificate generation + Mongo persistence + email send.
-      await ensureAutomationServicesReady();
-      const processed = await processVolunteerCertificate([], actualRowNumber, sheetId, volunteerTab);
-
-      if (!processed) {
-        return res.status(500).json({
-          success: false,
-          error: 'Volunteer marked approved, but certificate generation/email did not complete',
-          rowIndex,
-        });
-      }
-
       invalidateSheetsCache(['volunteers']);
 
+      // 2. Return success immediately so UI approval is fast and never blocked by
+      // certificate generation or email delivery latency.
       res.json({
         success: true,
-        message: 'Volunteer approved, certificate generated, stored in MongoDB, and email sent',
+        message: 'Volunteer approved successfully. Certificate processing started in background.',
         rowIndex,
       });
+
+      // 3. Process certificate/email in background (best-effort).
+      // This avoids client-side timeouts while preserving automation behavior.
+      void (async () => {
+        try {
+          await ensureAutomationServicesReady();
+          const certProcessed = await processVolunteerCertificate([], actualRowNumber, sheetId, volunteerTab);
+          if (!certProcessed) {
+            console.warn(
+              `⚠ Background certificate processing did not complete for row ${actualRowNumber}; volunteer remains approved for retry.`
+            );
+          }
+        } catch (automationError) {
+          console.error(
+            `⚠ Background automation error for row ${actualRowNumber} (volunteer remains approved):`,
+            automationError.message
+          );
+        } finally {
+          invalidateSheetsCache(['volunteers']);
+        }
+      })();
     } catch (error) {
       console.error('Error approving volunteer:', error);
       next(error);

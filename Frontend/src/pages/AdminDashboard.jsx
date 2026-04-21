@@ -441,7 +441,12 @@ export default function AdminDashboard() {
     );
 
     try {
-      await approveVolunteer(rowNumber);
+      const response = await approveVolunteer(rowNumber);
+      if (response?.data?.warning) {
+        alert(`⚠ ${response.data.warning}`);
+      }
+      // Refresh to get updated certificate ID and status
+      await refreshSheets();
     } catch (err) {
       setVolunteers(previous);
       alert(err?.response?.data?.error || "Approval failed.");

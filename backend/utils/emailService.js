@@ -8,6 +8,54 @@ const fs = require('fs');
 
 // Email transporter (initialized in setup)
 let transporter;
+let transporterConfig = null;
+
+function createTransporter(email, appPassword) {
+    return nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: email,
+            pass: appPassword,
+        },
+    });
+}
+
+function shouldRetrySend(error) {
+    if (!error) return false;
+    const retryableCodes = new Set(['ECONNECTION', 'ETIMEDOUT', 'ESOCKET', 'EPIPE']);
+    if (retryableCodes.has(error.code)) return true;
+
+    const message = String(error.message || '').toLowerCase();
+    return (
+        message.includes('connection closed') ||
+        message.includes('socket hang up') ||
+        message.includes('timeout') ||
+        message.includes('greeting never received')
+    );
+}
+
+async function ensureEmailServiceReady() {
+    if (!transporterConfig?.email || !transporterConfig?.appPassword) {
+        throw new Error('Email service credentials are not configured');
+    }
+
+    // If transporter exists, verify it's still alive
+    if (transporter) {
+        try {
+            await transporter.verify();
+            return;
+        } catch (_verifyError) {
+            console.warn('⚠ Existing email transporter failed verification, recreating...', _verifyError.message);
+            transporter = null;
+        }
+    }
+
+    // Create a fresh transporter and verify before persisting
+    const newTransporter = createTransporter(transporterConfig.email, transporterConfig.appPassword);
+    await newTransporter.verify();
+    transporter = newTransporter;
+    console.log('✓ Email transporter (re)initialized successfully');
+}
 
 /**
  * Initialize email transporter
@@ -17,18 +65,23 @@ let transporter;
  */
 async function initializeEmailService(email, appPassword) {
     try {
-        transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: email,
-                pass: appPassword,
-            },
-        });
+        if (!email || !appPassword) {
+            throw new Error('Email and app password are required to initialize email service');
+        }
 
-        // Test the connection
-        await transporter.verify();
+        transporterConfig = {
+            email: String(email).trim(),
+            appPassword: String(appPassword).trim(),
+        };
+
+        // Create and verify before persisting — if verify fails, transporter stays null
+        const newTransporter = createTransporter(transporterConfig.email, transporterConfig.appPassword);
+        await newTransporter.verify();
+        transporter = newTransporter;
+
         console.log('✓ Email service initialized successfully');
     } catch (error) {
+        transporter = null; // Ensure transporter is cleared on failure
         console.error('✗ Email service initialization failed:', error.message);
         throw error;
     }
@@ -45,9 +98,7 @@ async function initializeEmailService(email, appPassword) {
  */
 async function sendCertificateEmail(params) {
     try {
-        if (!transporter) {
-            throw new Error('Email service not initialized');
-        }
+        await ensureEmailServiceReady();
 
         const {
             to,
@@ -73,9 +124,16 @@ async function sendCertificateEmail(params) {
             throw new Error('Certificate attachment missing: provide certificateBuffer or certificatePath');
         }
 
+        const normalizedTo = String(to || '').trim();
+        if (!normalizedTo) {
+            throw new Error('Recipient email is required');
+        }
+
+        const fromAddress = process.env.EMAIL_FROM || transporterConfig?.email || process.env.EMAIL_USER;
+
         const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: to,
+            from: fromAddress,
+            to: normalizedTo,
             subject: 'Your Volunteer Certificate',
             html: `
                 <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
@@ -99,9 +157,23 @@ async function sendCertificateEmail(params) {
             ],
         };
 
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`✓ Certificate email sent to ${to}. Message ID: ${info.messageId}`);
-        return info;
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            console.log(`✓ Certificate email sent to ${normalizedTo}. Message ID: ${info.messageId}`);
+            return info;
+        } catch (error) {
+            if (!shouldRetrySend(error)) {
+                throw error;
+            }
+
+            console.warn(`⚠ Email send failed (transient): ${error.message}. Reinitializing transporter and retrying once...`);
+            transporter = null;
+            await ensureEmailServiceReady();
+
+            const retryInfo = await transporter.sendMail(mailOptions);
+            console.log(`✓ Certificate email sent on retry to ${normalizedTo}. Message ID: ${retryInfo.messageId}`);
+            return retryInfo;
+        }
     } catch (error) {
         console.error('✗ Error sending certificate email:', error.message);
         throw error;
@@ -116,13 +188,18 @@ async function sendCertificateEmail(params) {
  */
 async function sendRegistrationConfirmation(to, volunteerName) {
     try {
-        if (!transporter) {
-            throw new Error('Email service not initialized');
+        await ensureEmailServiceReady();
+
+        const normalizedTo = String(to || '').trim();
+        if (!normalizedTo) {
+            throw new Error('Recipient email is required');
         }
 
+        const fromAddress = process.env.EMAIL_FROM || transporterConfig?.email || process.env.EMAIL_USER;
+
         const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: to,
+            from: fromAddress,
+            to: normalizedTo,
             subject: 'Registration Received - Volunteer Application',
             html: `
                 <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">

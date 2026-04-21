@@ -13,6 +13,18 @@ const mongoose = require('mongoose');
 let isProcessing = false;
 let automationInterval = null;
 
+function toNodeBuffer(value) {
+    if (!value) return null;
+    if (Buffer.isBuffer(value)) return value;
+    if (value.buffer && Buffer.isBuffer(value.buffer)) return value.buffer;
+    if (value.type === 'Buffer' && Array.isArray(value.data)) return Buffer.from(value.data);
+    try {
+        return Buffer.from(value);
+    } catch (_error) {
+        return null;
+    }
+}
+
 async function waitForMongoReady(timeoutMs = 15000) {
     const startedAt = Date.now();
 
@@ -78,9 +90,15 @@ async function processVolunteerCertificate(row, rowNumber, spreadsheetId, sheetT
         const existingAsset = await MediaAsset.findOne({ originalName: filename }).lean();
 
         if (existingAsset?.data) {
-            pdfBuffer = existingAsset.data;
-            console.log(`   Certificate already exists in MongoDB: ${filename}`);
-        } else {
+            pdfBuffer = toNodeBuffer(existingAsset.data);
+            if (!pdfBuffer) {
+                console.warn(`   Stored certificate data was not a valid Buffer. Regenerating: ${filename}`);
+            } else {
+                console.log(`   Certificate already exists in MongoDB: ${filename}`);
+            }
+        }
+
+        if (!pdfBuffer) {
             pdfBuffer = await certificate.generateCertificatePDF(
                 { name, phone, email, position, experience, availability },
                 certId,
@@ -104,19 +122,29 @@ async function processVolunteerCertificate(row, rowNumber, spreadsheetId, sheetT
             console.log(`   Certificate stored in MongoDB: ${filename}`);
         }
 
-        // Send certificate email (always use assigned certId)
-        await emailService.sendCertificateEmail({
-            to: email,
-            volunteerName: name,
-            certificateId: certId,
-            certificateBuffer: pdfBuffer,
-            certificateFileName: filename,
-        });
+        // Attempt to send certificate email (non-fatal)
+        let emailSent = false;
+        try {
+            await emailService.sendCertificateEmail({
+                to: email,
+                volunteerName: name,
+                certificateId: certId,
+                certificateBuffer: pdfBuffer,
+                certificateFileName: filename,
+            });
+            emailSent = true;
+            console.log(`✓ Certificate email sent to ${email} with ID ${certId}`);
+        } catch (emailError) {
+            console.error(`⚠ Email send failed for ${email}: ${emailError.message}. Certificate is saved in MongoDB.`);
+        }
 
-        // Update status to Completed
+        // Update status to Completed (certificate is generated regardless of email)
         await googleSheets.updateCell(spreadsheetId, rowNumber, 6, 'Completed', sheetTab); // Column G
 
-        console.log(`✓ Certificate sent to ${email} with ID ${certId}`);
+        if (!emailSent) {
+            console.warn(`⚠ Certificate for ${name} (${certId}) saved but email not sent. Manual re-send may be needed.`);
+        }
+
         return true;
     } catch (error) {
         console.error(`✗ Error processing volunteer certificate:`, error.message);

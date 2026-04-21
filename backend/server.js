@@ -38,6 +38,7 @@ const donateRouter = require('./routes/donate');
 const automationRoutes = require('./routes/automation');
 const { initializeGoogleAuth } = require('./utils/googleSheets');
 const { initializeEmailService } = require('./utils/emailService');
+const { startAutomation, stopAutomation } = require('./utils/automation');
 
 // App initialization
 const app = express();
@@ -210,18 +211,27 @@ async function startServer() {
     const emailPassword = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS;
     const automationEnabled = process.env.AUTOMATION_ENABLED === 'true';
     const automationMode = (process.env.AUTOMATION_MODE || 'webhook').toLowerCase();
+    const automationInterval = Number(process.env.AUTOMATION_INTERVAL || 60000);
 
-    if (automationEnabled && spreadsheetId && emailUser && emailPassword && automationMode === 'webhook') {
+    if (automationEnabled && spreadsheetId && emailUser && emailPassword) {
       try {
         await initializeGoogleAuth();
         await initializeEmailService(emailUser, emailPassword);
-        console.log('✅ Volunteer certificate automation is in webhook mode (runs only on sheets event trigger)\n');
+
+        if (automationMode === 'webhook') {
+          console.log('✅ Volunteer certificate automation is in webhook mode (runs only on sheets event trigger)\n');
+        } else if (automationMode === 'interval' || automationMode === 'polling') {
+          startAutomation(spreadsheetId, automationInterval);
+          console.log(`✅ Volunteer certificate automation is in ${automationMode} mode (runs every ${Math.round(automationInterval / 1000)}s)\n`);
+        } else {
+          console.warn(`⚠ Unknown AUTOMATION_MODE="${automationMode}". Supported modes: webhook, interval, polling`);
+        }
       } catch (automationError) {
         console.warn('⚠ Volunteer automation not started:', automationError.message);
       }
     } else {
       console.warn(
-        '⚠ Volunteer automation disabled (set AUTOMATION_ENABLED=true, AUTOMATION_MODE=webhook and configure GOOGLE_SHEET_ID/SPREADSHEET_ID + EMAIL_USER/EMAIL_PASSWORD)'
+        '⚠ Volunteer automation disabled (set AUTOMATION_ENABLED=true and configure GOOGLE_SHEET_ID/SPREADSHEET_ID + EMAIL_USER/EMAIL_PASSWORD)'
       );
     }
 
@@ -252,6 +262,7 @@ process.on('uncaughtException', (error) => {
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('📍 SIGTERM received, shutting down gracefully...');
+  stopAutomation();
   mongoose.connection.close().then(() => {
     console.log('🔌 MongoDB connection closed');
     process.exit(0);

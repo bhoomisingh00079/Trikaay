@@ -14,6 +14,11 @@ A full-stack website and admin panel for managing Trikaay content, volunteers, c
 - Frontend: `Frontend/`
 - Backend: `backend/`
 
+## Diagrams
+
+- System architecture: `system-architecture.svg`
+- User flow: `user-flow-diagram.svg`
+
 ## Main Features
 
 - Public website pages with dynamic content
