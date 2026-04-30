@@ -29,13 +29,13 @@ async function seedDatabase() {
       console.log('📝 Seeding Admin User...');
       const hashedPassword = await bcrypt.hash('Test@123', 12);
       await AdminUser.create({
-        email: 'ruturaj.rajwade@gmail.com',
+        email: 'trikay@gmail.com',
         passwordHash: hashedPassword,
         role: 'admin',
         lastLogin: null,
       });
       console.log('   ✅ Created admin user');
-      console.log('      Email: ruturaj.rajwade@gmail.com');
+      console.log('      Email: trikay@gmail.com');
       console.log('      Password: Test@123');
       console.log('      ⚠️  Change this password immediately in production!');
     } else {
