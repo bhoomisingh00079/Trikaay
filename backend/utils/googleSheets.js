@@ -29,9 +29,10 @@ let auth;
  */
 async function initializeGoogleAuth() {
     try {
-        const keyFile = path.join(__dirname, '../config/googleAuth.json');
-        auth = new google.auth.GoogleAuth({
-            keyFile: keyFile,
+        // Correct long-term method using environment variables directly
+        auth = new google.auth.JWT({
+            email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+            key: process.env.GOOGLE_PRIVATE_KEY ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined,
             scopes: [
                 'https://www.googleapis.com/auth/spreadsheets',
                 'https://www.googleapis.com/auth/drive',
