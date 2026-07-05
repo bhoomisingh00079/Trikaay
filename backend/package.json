@@ -34,5 +34,12 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "certId.json",
+      "certificates/**",
+      "*.pdf"
+    ]
   }
 }

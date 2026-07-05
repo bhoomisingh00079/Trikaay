@@ -188,7 +188,10 @@ async function findPendingCertificates(spreadsheetId, tabName) {
             return []; // No data rows
         }
 
-        // Skip header row (row 0)
+        // Skip header row (row 0). Only return rows that are strictly "Approved"
+        // with NO certificate ID assigned yet. Rows already in "Processing" or
+        // "Completed" (or with a certId) must be ignored here so the
+        // /sheets-event webhook cannot double-send email.
         const pendingRows = rows
             .map((row, index) => ({
                 rowNumber: index + 1, // 1-based row number
@@ -197,16 +200,14 @@ async function findPendingCertificates(spreadsheetId, tabName) {
             .filter((item, index) => {
                 if (index === 0) return false; // Skip header
                 const row = item.data;
-                // Status is column 6 (index), Certificate ID is column 7 (index)
-                const status = row[6] || '';
-                const certId = row[7] || '';
-                // Approved rows: either certificate still missing (new) or already assigned but not completed yet
-                return status === 'Approved';
+                const status = String(row[6] || '').trim();
+                const certId = String(row[7] || '').trim();
+                return status === 'Approved' && !certId;
             });
 
         return pendingRows;
     } catch (error) {
-        console.error('✗ Error finding pending certificates:', error.message);
+        console.error('✗ Error finding pending certificates:', error);
         throw error;
     }
 }

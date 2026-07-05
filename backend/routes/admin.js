@@ -772,6 +772,13 @@ router.patch(
 /**
  * POST /api/admin/sheets/volunteers/:rowIndex/approve
  * Approve a volunteer: update status to Approved and trigger automation
+ *
+ * Deterministic flow:
+ *   1. Write Status="Approved" to the sheet (the source of truth).
+ *   2. Directly run processVolunteerCertificate for THIS row. No polling.
+ *   3. processVolunteerCertificate is idempotent and re-entry safe; it will
+ *      skip if the row is already Completed/Processing.
+ *   4. Invalidate the volunteers cache on every status change.
  */
 router.post(
   '/sheets/volunteers/:rowIndex/approve',
@@ -794,38 +801,83 @@ router.post(
       const volunteerTab = await resolveSheetTab(sheetId, VOLUNTEER_TAB_CANDIDATES);
       const actualRowNumber = Number.parseInt(rowIndex, 10);
 
-      // 1. Update status column (G) to Approved.
-      await sheets.spreadsheets.values.update({
+// Update Google Sheet
+await sheets.spreadsheets.values.update({
+    spreadsheetId: sheetId,
+    range: toSheetRange(volunteerTab, `G${actualRowNumber}`),
+    valueInputOption: 'USER_ENTERED',
+    requestBody: {
+        values: [['Approved']],
+    },
+});
+
+invalidateSheetsCache(['volunteers']);
+
+console.log(`✓ Status updated to Approved for row ${actualRowNumber}`);
+
+
+// Wait until Google Sheets actually returns Approved
+let confirmed = false;
+
+for (let i = 0; i < 20; i++) {
+
+    const verify = await sheets.spreadsheets.values.get({
         spreadsheetId: sheetId,
         range: toSheetRange(volunteerTab, `G${actualRowNumber}`),
-        valueInputOption: 'USER_ENTERED',
-        requestBody: {
-          values: [['Approved']],
-        },
-      });
+    });
 
-      // 2. Immediately trigger certificate generation + Mongo persistence + email send.
-      await ensureAutomationServicesReady();
-      const processed = await processVolunteerCertificate([], actualRowNumber, sheetId, volunteerTab);
+    const status = String(
+        verify.data.values?.[0]?.[0] || ""
+    ).trim();
 
-      if (!processed) {
-        return res.status(500).json({
-          success: false,
-          error: 'Volunteer marked approved, but certificate generation/email did not complete',
-          rowIndex,
-        });
-      }
+    if (status === "Approved") {
+        confirmed = true;
+        console.log(`✓ Google Sheet confirmed Approved`);
+        break;
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+}
+
+if (!confirmed) {
+    throw new Error(
+        `Google Sheet never confirmed approval for row ${actualRowNumber}`
+    );
+}
+
+// Ensure services
+await ensureAutomationServicesReady();
+
+// Start certificate generation
+const result = await processVolunteerCertificate(
+    [],
+    actualRowNumber,
+    sheetId,
+    volunteerTab
+);
 
       invalidateSheetsCache(['volunteers']);
 
-      res.json({
-        success: true,
-        message: 'Volunteer approved, certificate generated, stored in MongoDB, and email sent',
+      if (result && result.success) {
+        return res.json({
+          success: true,
+          message: 'Volunteer approved, certificate generated, stored in MongoDB, and email sent',
+          rowIndex,
+          skipped: !!result.skipped,
+          reason: result.reason || null,
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        error: 'Volunteer marked approved, but certificate generation/email did not complete',
         rowIndex,
+        reason: (result && result.reason) || 'unknown',
       });
     } catch (error) {
-      console.error('Error approving volunteer:', error);
-      next(error);
+      console.error(`[${new Date().toISOString()}] [approve] error:`, error);
+      if (error && error.stack) console.error(error.stack);
+      return next(error);
     }
   }
 );
@@ -855,6 +907,8 @@ router.post(
       const volunteerTab = await resolveSheetTab(sheetId, VOLUNTEER_TAB_CANDIDATES);
       const actualRowNumber = Number.parseInt(rowIndex, 10);
 
+      // Ensure the row is at least "Approved" so the processor can claim it.
+      // The processor is idempotent: it will skip rows already Completed.
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
         range: toSheetRange(volunteerTab, `G${actualRowNumber}`),
@@ -863,27 +917,37 @@ router.post(
           values: [['Approved']],
         },
       });
+      invalidateSheetsCache(['volunteers']);
 
       await ensureAutomationServicesReady();
-      const processed = await processVolunteerCertificate([], actualRowNumber, sheetId, volunteerTab);
-
-      if (!processed) {
-        return res.status(500).json({
-          success: false,
-          error: 'Retry failed. Volunteer remains in Approved status for another retry.',
-          rowIndex,
-        });
-      }
+      const result = await processVolunteerCertificate(
+        [],
+        actualRowNumber,
+        sheetId,
+        volunteerTab
+      );
 
       invalidateSheetsCache(['volunteers']);
 
-      return res.json({
-        success: true,
-        message: 'Certificate retry successful. Certificate saved to MongoDB and email sent.',
+      if (result && result.success) {
+        return res.json({
+          success: true,
+          message: 'Certificate retry successful. Certificate saved to MongoDB and email sent.',
+          rowIndex,
+          skipped: !!result.skipped,
+          reason: result.reason || null,
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        error: 'Retry failed. Volunteer remains in Approved status for another retry.',
         rowIndex,
+        reason: (result && result.reason) || 'unknown',
       });
     } catch (error) {
-      console.error('Error retrying certificate:', error);
+      console.error(`[${new Date().toISOString()}] [retry] error:`, error);
+      if (error && error.stack) console.error(error.stack);
       return next(error);
     }
   }

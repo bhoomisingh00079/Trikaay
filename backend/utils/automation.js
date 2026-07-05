@@ -1,7 +1,28 @@
 /**
  * Automation Process Module
- * Background task that runs every 10 seconds to process approved volunteers
- * and send certificates
+ *
+ * Idempotent, re-entry-safe processing of approved volunteers.
+ *
+ * Design:
+ *   - Google Sheets is the source of truth.
+ *   - There is NO polling. The /sheets-event webhook (or a direct
+ *     "approve" call from the admin route) drives processing.
+ *   - A per-row in-memory lock guarantees that two simultaneous clicks
+ *     for the same row can never send two emails.
+ *   - The sheet itself is used as a coarse lock: when a row is being
+ *     processed, its Status is set to "Processing". Other workers
+ *     (the webhook, the next click) MUST skip "Processing" rows.
+ *   - "Completed" is terminal. Any call that sees "Completed" exits
+ *     successfully without doing work.
+ *
+ * Stage log markers (printed at every stage):
+ *   - sheet updated
+ *   - automation started
+ *   - row fetched
+ *   - certificate generated
+ *   - mongo saved
+ *   - email sent
+ *   - status changed to Completed
  */
 
 const googleSheets = require('./googleSheets');
@@ -10,205 +31,295 @@ const emailService = require('./emailService');
 const MediaAsset = require('../models/MediaAsset');
 const mongoose = require('mongoose');
 
-let isProcessing = false;
-let automationInterval = null;
+const STAGE = {
+  AUTOMATION_STARTED: 'automation started',
+  ROW_FETCHED: 'row fetched',
+  CERTIFICATE_GENERATED: 'certificate generated',
+  MONGO_SAVED: 'mongo saved',
+  EMAIL_SENT: 'email sent',
+  STATUS_COMPLETED: 'status changed to Completed',
+  SHEET_UPDATED: 'sheet updated',
+};
+
+const AUTOMATION_STATUS = {
+  APPROVED: 'Approved',
+  PROCESSING: 'Processing',
+  COMPLETED: 'Completed',
+};
+
+// Per-row in-memory lock: `${sheetId}::${rowNumber}` -> Promise
+const rowLocks = new Map();
+
+// Whole-cycle lock (one automation pass at a time for the webhook path)
+let isCycleRunning = false;
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function logStage(stage, extra) {
+  const tail = extra ? ` | ${extra}` : '';
+  console.log(`[${nowIso()}] [automation] [${stage}]${tail}`);
+}
+
+function logError(stage, error) {
+  console.error(`[${nowIso()}] [automation] [error] [${stage}]`, error);
+  if (error && error.stack) {
+    console.error(error.stack);
+  }
+}
 
 async function waitForMongoReady(timeoutMs = 15000) {
-    const startedAt = Date.now();
-
-    while (mongoose.connection.readyState !== 1) {
-        if (Date.now() - startedAt > timeoutMs) {
-            throw new Error(`MongoDB is not connected (readyState=${mongoose.connection.readyState})`);
-        }
-        await new Promise((resolve) => setTimeout(resolve, 250));
+  const startedAt = Date.now();
+  while (mongoose.connection.readyState !== 1) {
+    if (Date.now() - startedAt > timeoutMs) {
+      throw new Error(
+        `MongoDB is not connected (readyState=${mongoose.connection.readyState})`
+      );
     }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+}
+
+async function withRowLock(lockKey, work) {
+  const previous = rowLocks.get(lockKey) || Promise.resolve();
+  let release;
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  rowLocks.set(
+    lockKey,
+    previous.then(() => gate)
+  );
+  try {
+    await previous;
+    return await work();
+  } finally {
+    release();
+    if (rowLocks.get(lockKey) === gate) {
+      rowLocks.delete(lockKey);
+    }
+  }
 }
 
 /**
- * Process a single volunteer for certificate
- * @param {Object} row - Row data from Google Sheets
- * @param {number} rowNumber - Row number in spreadsheet
- * @param {string} spreadsheetId - Google Sheets ID
- * @param {string} [sheetTab] - Google Sheets tab name override
- * @returns {Promise<boolean>} - True if successfully processed
+ * Atomically claim a row for processing.
+ *
+ * Returns:
+ *   { state: 'claimed',    row, rowNumber, certId?, sheetTab }
+ *   { state: 'already_done', row, rowNumber, certId?, sheetTab }   (Completed or certId set)
+ *   { state: 'in_progress' }                                       (another worker holds it)
+ *   { state: 'not_eligible', status }                              (e.g. Pending / rejected)
  */
-async function processVolunteerCertificate(row, rowNumber, spreadsheetId, sheetTab) {
-    try {
-        // Re-read row to avoid race conditions
-        const currentRow = await googleSheets.getRow(spreadsheetId, rowNumber, sheetTab);
-        const name = currentRow[0];
-        const phone = currentRow[1];
-        const email = currentRow[2];
-        const position = currentRow[3];
-        const experience = currentRow[4];
-        const availability = currentRow[5];
-        const status = currentRow[6];
-        let certId = currentRow[7];
+async function claimRow(spreadsheetId, rowNumber, sheetTab) {
+  const currentRow = await googleSheets.getRow(spreadsheetId, rowNumber, sheetTab);
+  const status = String(currentRow[6] || '').trim();
+  const existingCertId = String(currentRow[7] || '').trim();
 
-        // Status must still be Approved
-        if (status !== 'Approved') {
-            console.log(`   Skipping row ${rowNumber}; status is not Approved (${status})`);
-            return false;
-        }
+  logStage(STAGE.ROW_FETCHED, `row=${rowNumber} status="${status}" certId="${existingCertId}"`);
 
-        if (!email) {
-            console.warn(`   Skipping row ${rowNumber}; missing email`);
-            return false;
-        }
+  if (status === AUTOMATION_STATUS.COMPLETED) {
+    return { state: 'already_done', row: currentRow, rowNumber, certId: existingCertId, sheetTab };
+  }
 
-        console.log(`\n📝 Processing volunteer: ${name} (${email})`);
+  if (status === AUTOMATION_STATUS.PROCESSING) {
+    return { state: 'in_progress' };
+  }
 
-        // If no certificate ID yet, generate one and reserve it
-        if (!certId) {
-            certId = certificate.generateCertificateId();
-            console.log(`   Assigned Certificate ID: ${certId}`);
-            await googleSheets.updateCell(spreadsheetId, rowNumber, 7, certId, sheetTab); // Column H
+  if (status !== AUTOMATION_STATUS.APPROVED) {
+    return { state: 'not_eligible', status };
+  }
 
-            // Optionally mark processing status so it doesn't get picked up by another round
-            await googleSheets.updateCell(spreadsheetId, rowNumber, 6, 'Processing', sheetTab); // Column G
-        }
+  // Generate certId if missing and atomically claim by writing "Processing".
+  // If two workers race here, Google Sheets' last-writer-wins on the same
+  // single cell will leave exactly one winner; the loser will read back
+  // "Processing" on the next read and exit.
+  let certId = existingCertId;
+  if (!certId) {
+    certId = certificate.generateCertificateId();
+    await googleSheets.updateCell(spreadsheetId, rowNumber, 7, certId, sheetTab);
+    logStage(STAGE.SHEET_UPDATED, `row=${rowNumber} col=H certId=${certId}`);
+  }
 
-        // Determine certificate filename
-        const safeName = name ? name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-]/g, '') : 'volunteer';
-        const filename = `${certId}_${safeName}.pdf`;
+  await googleSheets.updateCell(spreadsheetId, rowNumber, 6, AUTOMATION_STATUS.PROCESSING, sheetTab);
+  logStage(STAGE.SHEET_UPDATED, `row=${rowNumber} col=G status=${AUTOMATION_STATUS.PROCESSING}`);
 
-        await waitForMongoReady();
-
-        let pdfBuffer;
-        const existingAsset = await MediaAsset.findOne({ originalName: filename }).lean();
-
-        if (existingAsset?.data) {
-            pdfBuffer = existingAsset.data;
-            console.log(`   Certificate already exists in MongoDB: ${filename}`);
-        } else {
-            pdfBuffer = await certificate.generateCertificatePDF(
-                { name, phone, email, position, experience, availability },
-                certId,
-                process.env.NGO_NAME || 'Our NGO'
-            );
-
-            await MediaAsset.findOneAndUpdate(
-                { originalName: filename },
-                {
-                    originalName: filename,
-                    kind: 'pdf',
-                    category: 'certificate',
-                    title: `Volunteer Certificate - ${name}`,
-                    mimeType: 'application/pdf',
-                    size: pdfBuffer.length,
-                    data: pdfBuffer,
-                },
-                { upsert: true, new: true, setDefaultsOnInsert: true }
-            );
-
-            console.log(`   Certificate stored in MongoDB: ${filename}`);
-        }
-
-        // Send certificate email (always use assigned certId)
-        await emailService.sendCertificateEmail({
-            to: email,
-            volunteerName: name,
-            certificateId: certId,
-            certificateBuffer: pdfBuffer,
-            certificateFileName: filename,
-        });
-
-        // Update status to Completed
-        await googleSheets.updateCell(spreadsheetId, rowNumber, 6, 'Completed', sheetTab); // Column G
-
-        console.log(`✓ Certificate sent to ${email} with ID ${certId}`);
-        return true;
-    } catch (error) {
-        console.error(`✗ Error processing volunteer certificate:`, error.message);
-        // If error happens after assigning certId, keep row in Approved for retry
-        try {
-            await googleSheets.updateCell(spreadsheetId, rowNumber, 6, 'Approved', sheetTab);
-        } catch (innerError) {
-            console.warn('⚠ Could not revert status after error:', innerError.message);
-        }
-        return false;
-    }
+  return { state: 'claimed', row: currentRow, rowNumber, certId, sheetTab };
 }
 
 /**
- * Main automation function - runs every 10 seconds
- * @param {string} spreadsheetId - Google Sheets ID
- * @returns {Promise<void>}
+ * Mark a row Completed in the sheet. This is the terminal transition.
+ */
+async function markCompleted(spreadsheetId, rowNumber, sheetTab) {
+  await googleSheets.updateCell(
+    spreadsheetId,
+    rowNumber,
+    6,
+    AUTOMATION_STATUS.COMPLETED,
+    sheetTab
+  );
+  logStage(STAGE.STATUS_COMPLETED, `row=${rowNumber} -> ${AUTOMATION_STATUS.COMPLETED}`);
+}
+
+/**
+ * Revert a row back to "Approved" so the next attempt can retry.
+ * Only safe to call if we successfully wrote "Processing" — otherwise
+ * we would clobber the original state.
+ */
+async function revertToApproved(spreadsheetId, rowNumber, sheetTab) {
+  try {
+    await googleSheets.updateCell(
+      spreadsheetId,
+      rowNumber,
+      6,
+      AUTOMATION_STATUS.APPROVED,
+      sheetTab
+    );
+    logStage(STAGE.SHEET_UPDATED, `row=${rowNumber} reverted to ${AUTOMATION_STATUS.APPROVED}`);
+  } catch (innerError) {
+    logError('revert to Approved', innerError);
+  }
+}
+
+/**
+ * Process a single volunteer for certificate.
+ *
+ * @param {Object} _unused            - Kept for backward compatibility (ignored).
+ * @param {number} rowNumber          - 1-based row number in the sheet.
+ * @param {string} spreadsheetId      - Google Sheets ID.
+ * @param {string} [sheetTab]         - Optional tab name override.
+ * @returns {Promise<{success:boolean, skipped?:boolean, reason?:string}>}
+ */
+async function processVolunteerCertificate(_unused, rowNumber, spreadsheetId, sheetTab) {
+  const lockKey = `${spreadsheetId}::${rowNumber}`;
+
+  return withRowLock(lockKey, async () => {
+    logStage(STAGE.AUTOMATION_STARTED, `row=${rowNumber}`);
+
+    try {
+      await waitForMongoReady();
+
+      // 1. Claim the row (re-reads, generates certId, writes "Processing").
+      const claim = await claimRow(spreadsheetId, rowNumber, sheetTab);
+
+      if (claim.state === 'already_done') {
+        logStage(STAGE.STATUS_COMPLETED, `row=${rowNumber} already Completed (idempotent no-op)`);
+        return { success: true, skipped: true, reason: 'already_completed' };
+      }
+      if (claim.state === 'in_progress') {
+        return { success: false, skipped: true, reason: 'in_progress' };
+      }
+      if (claim.state === 'not_eligible') {
+        return { success: false, skipped: true, reason: `not_eligible:${claim.status}` };
+      }
+
+      const { row, certId } = claim;
+      const name = row[0];
+      const phone = row[1];
+      const email = row[2];
+      const position = row[3];
+      const experience = row[4];
+      const availability = row[5];
+
+      if (!email) {
+        await revertToApproved(spreadsheetId, rowNumber, sheetTab);
+        return { success: false, skipped: true, reason: 'missing_email' };
+      }
+
+      // 2. Generate or reuse the certificate PDF.
+      const safeName = name
+        ? name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-]/g, '')
+        : 'volunteer';
+      const filename = `${certId}_${safeName}.pdf`;
+
+      let pdfBuffer;
+      const existingAsset = await MediaAsset.findOne({ originalName: filename }).lean();
+      if (existingAsset && existingAsset.data) {
+        pdfBuffer = existingAsset.data;
+        logStage(STAGE.CERTIFICATE_GENERATED, `row=${rowNumber} reused ${filename}`);
+      } else {
+        pdfBuffer = await certificate.generateCertificatePDF(
+          { name, phone, email, position, experience, availability },
+          certId,
+          process.env.NGO_NAME || 'Our NGO'
+        );
+        logStage(STAGE.CERTIFICATE_GENERATED, `row=${rowNumber} ${filename} (${pdfBuffer.length} bytes)`);
+
+        await MediaAsset.findOneAndUpdate(
+          { originalName: filename },
+          {
+            originalName: filename,
+            kind: 'pdf',
+            category: 'certificate',
+            title: `Volunteer Certificate - ${name}`,
+            mimeType: 'application/pdf',
+            size: pdfBuffer.length,
+            data: pdfBuffer,
+          },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+        logStage(STAGE.MONGO_SAVED, `row=${rowNumber} ${filename}`);
+      }
+
+      // 3. Send the email.
+      await emailService.sendCertificateEmail({
+        to: email,
+        volunteerName: name,
+        certificateId: certId,
+        certificateBuffer: pdfBuffer,
+        certificateFileName: filename,
+      });
+      logStage(STAGE.EMAIL_SENT, `row=${rowNumber} -> ${email}`);
+
+      // 4. Mark the row Completed (terminal).
+      await markCompleted(spreadsheetId, rowNumber, sheetTab);
+
+      return { success: true };
+    } catch (error) {
+      logError(`row=${rowNumber} processing`, error);
+      // We claimed the row (status -> Processing). Revert so a retry works.
+      await revertToApproved(spreadsheetId, rowNumber, sheetTab);
+      return { success: false, reason: 'exception' };
+    }
+  });
+}
+
+/**
+ * Webhook-driven automation cycle.
+ * Finds all rows that are still "Approved" with no certId, and processes
+ * each one. Idempotent: "Processing" and "Completed" rows are ignored.
  */
 async function runAutomation(spreadsheetId) {
-    // Prevent overlapping executions
-    if (isProcessing) {
-        console.log('⏳ Automation already running, skipping this cycle');
-        return;
+  if (isCycleRunning) {
+    logStage('cycle skipped', 'another cycle is already running');
+    return { skipped: true };
+  }
+  isCycleRunning = true;
+
+  try {
+    logStage(STAGE.AUTOMATION_STARTED, 'cycle begin');
+
+    const pendingRows = await googleSheets.findPendingCertificates(spreadsheetId);
+    logStage('cycle scan', `pending=${pendingRows.length}`);
+
+    const results = [];
+    for (const item of pendingRows) {
+      // eslint-disable-next-line no-await-in-loop
+      const r = await processVolunteerCertificate([], item.rowNumber, spreadsheetId);
+      results.push({ rowNumber: item.rowNumber, ...r });
     }
 
-    isProcessing = true;
-
-    try {
-        console.log(`\n🔄 [${new Date().toLocaleTimeString()}] Running automation process...`);
-
-        // Find all rows with Status="Approved" and empty Certificate ID
-        const pendingRows = await googleSheets.findPendingCertificates(spreadsheetId);
-
-        if (pendingRows.length === 0) {
-            console.log('   No pending certificates to process');
-        } else {
-            console.log(`   Found ${pendingRows.length} pending certificate(s)`);
-
-            // Process each pending certificate
-            for (const item of pendingRows) {
-                await processVolunteerCertificate(item.data, item.rowNumber, spreadsheetId);
-                // Add a small delay between processing to avoid rate limits
-                await new Promise((resolve) => setTimeout(resolve, 1000));
-            }
-
-            console.log(`✓ Automation cycle completed`);
-        }
-    } catch (error) {
-        console.error('✗ Automation process error:', error.message);
-    } finally {
-        isProcessing = false;
-    }
-}
-
-/**
- * Start the automation process
- * @param {string} spreadsheetId - Google Sheets ID
- * @param {number} interval - Interval in milliseconds (default 60000 = 60 seconds)
- * @returns {void}
- */
-function startAutomation(spreadsheetId, interval = 60000) {
-    if (automationInterval) {
-        console.log('⚠ Automation already running');
-        return;
-    }
-
-    console.log(`\n🚀 Starting automation process (runs every ${interval / 1000} seconds)`);
-
-    // Run immediately on start
-    runAutomation(spreadsheetId);
-
-    // Set up interval
-    automationInterval = setInterval(() => {
-        runAutomation(spreadsheetId);
-    }, interval);
-}
-
-/**
- * Stop the automation process
- * @returns {void}
- */
-function stopAutomation() {
-    if (automationInterval) {
-        clearInterval(automationInterval);
-        automationInterval = null;
-        console.log('⏹ Automation process stopped');
-    }
+    logStage('cycle done', `processed=${results.length}`);
+    return { skipped: false, results };
+  } catch (error) {
+    logError('cycle', error);
+    return { skipped: false, error: true };
+  } finally {
+    isCycleRunning = false;
+  }
 }
 
 module.exports = {
-    startAutomation,
-    stopAutomation,
-    runAutomation,
-    processVolunteerCertificate,
+  processVolunteerCertificate,
+  runAutomation,
 };

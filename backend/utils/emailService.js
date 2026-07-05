@@ -103,7 +103,10 @@ async function sendCertificateEmail(params) {
         console.log(`✓ Certificate email sent to ${to}. Message ID: ${info.messageId}`);
         return info;
     } catch (error) {
-        console.error('✗ Error sending certificate email:', error.message);
+        console.error(`✗ Error sending certificate email to ${params && params.to}:`, error);
+        if (error && error.stack) {
+            console.error(error.stack);
+        }
         throw error;
     }
 }

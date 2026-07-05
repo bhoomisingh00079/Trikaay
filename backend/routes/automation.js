@@ -13,6 +13,10 @@ async function ensureServicesReady() {
   const emailUser = process.env.EMAIL_USER;
   const emailPassword = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS;
 
+  if (!emailUser || !emailPassword) {
+    throw new Error('Email service credentials are not configured (EMAIL_USER and EMAIL_PASSWORD/EMAIL_PASS required)');
+  }
+
   await initializeGoogleAuth();
   await initializeEmailService(emailUser, emailPassword);
   servicesReady = true;
@@ -50,13 +54,16 @@ router.post('/sheets-event', async (req, res, next) => {
     }
 
     await ensureServicesReady();
-    await runAutomation(spreadsheetId);
+    const outcome = await runAutomation(spreadsheetId);
 
     return res.json({
       success: true,
       message: 'Automation run completed',
+      outcome,
     });
   } catch (error) {
+    console.error(`[${new Date().toISOString()}] [webhook] error:`, error);
+    if (error && error.stack) console.error(error.stack);
     return next(error);
   }
 });
