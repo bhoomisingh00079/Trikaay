@@ -1,55 +1,61 @@
 /**
  * Seed Script for Trikaay MongoDB Database
- * Reads hardcoded data from frontend and populates MongoDB
- * Safe to run multiple times (idempotent)
+ * Always resets the admin user to the credentials below.
  */
+console.log("THIS IS THE NEW SEED FILE");
+require("dotenv").config();
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
-require('dotenv').config();
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-
-// Import models
-const AdminUser = require('./models/AdminUser');
+// Import model
+const AdminUser = require("./models/AdminUser");
 
 async function seedDatabase() {
   try {
-    // Connect to MongoDB
-    console.log('\n🔄 Connecting to MongoDB...');
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+    console.log("\n🔄 Connecting to MongoDB...");
+
+    await mongoose.connect(process.env.MONGO_URI);
+
+    console.log("✅ MongoDB connected successfully");
+    console.log("\n🌱 Starting database seed...\n");
+
+    // Delete existing admin with this email
+    const deleted = await AdminUser.deleteOne({
+      email: "trikay@gmail.com",
     });
-    console.log('✅ MongoDB connected successfully');
 
-    console.log('\n🌱 Starting database seed...\n');
-
-    // Seed Admin User
-    const adminCount = await AdminUser.countDocuments();
-    if (adminCount === 0) {
-      console.log('📝 Seeding Admin User...');
-      const hashedPassword = await bcrypt.hash('Test@123', 12);
-      await AdminUser.create({
-        email: 'trikay@gmail.com',
-        passwordHash: hashedPassword,
-        role: 'admin',
-        lastLogin: null,
-      });
-      console.log('   ✅ Created admin user');
-      console.log('      Email: trikay@gmail.com');
-      console.log('      Password: Test@123');
-      console.log('      ⚠️  Change this password immediately in production!');
+    if (deleted.deletedCount > 0) {
+      console.log("🗑️ Existing admin deleted.");
     } else {
-      console.log('ℹ️  Admin user already present. Skipping admin seed.');
+      console.log("ℹ️ No existing admin found.");
     }
 
-    console.log('\n✨ Database seed completed successfully!\n');
-    
+    // Create new password hash
+    const hashedPassword = await bcrypt.hash("Test@123", 12);
+
+    // Create fresh admin
+    const admin = await AdminUser.create({
+      email: "trikay@gmail.com",
+      passwordHash: hashedPassword,
+      role: "admin",
+      lastLogin: null,
+    });
+
+    console.log("\n✅ Admin user created successfully!");
+    console.log("-------------------------------------");
+    console.log("Email    :", admin.email);
+    console.log("Password : Test@123");
+    console.log("Role     :", admin.role);
+    console.log("-------------------------------------");
+
+    console.log("\n✨ Database seed completed successfully!\n");
+
   } catch (error) {
-    console.error('\n❌ Seed error:', error.message);
+    console.error("\n❌ Seed error:", error);
     process.exit(1);
   } finally {
     await mongoose.connection.close();
-    console.log('🔌 MongoDB connection closed\n');
+    console.log("🔌 MongoDB connection closed\n");
   }
 }
 
