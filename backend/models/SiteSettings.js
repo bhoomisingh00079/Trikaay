@@ -16,7 +16,6 @@ const siteSettingsSchema = new mongoose.Schema(
       type: String,
       default: '',
       trim: true,
-      lowercase: true,
     },
     contactAddress: {
       type: String,
@@ -87,24 +86,31 @@ siteSettingsSchema.pre('save', function (next) {
   }
 });
 
+function safeDecrypt(value) {
+  if (!value) return '';
+  try {
+    const decrypted = decrypt(value);
+    return decrypted || '';
+  } catch (error) {
+    console.warn('Decryption returned no plaintext for a stored value; treating as empty.', error.message);
+    return '';
+  }
+}
+
 /**
  * Post-find hook: Decrypt sensitive contact fields after retrieval
  * Applies to all query methods: find(), findOne(), findById(), etc.
  */
 siteSettingsSchema.post('find', function (docs) {
-  try {
-    if (Array.isArray(docs)) {
-      docs.forEach((doc) => {
-        if (doc) {
-          doc.contactPhone = decrypt(doc.contactPhone);
-          doc.contactEmail = decrypt(doc.contactEmail);
-          doc.contactAddress = decrypt(doc.contactAddress);
-          doc.contactAddressSwapnalaya = decrypt(doc.contactAddressSwapnalaya);
-        }
-      });
-    }
-  } catch (error) {
-    console.error('Decryption error in post-find hook:', error);
+  if (Array.isArray(docs)) {
+    docs.forEach((doc) => {
+      if (doc) {
+        doc.contactPhone = safeDecrypt(doc.contactPhone);
+        doc.contactEmail = safeDecrypt(doc.contactEmail);
+        doc.contactAddress = safeDecrypt(doc.contactAddress);
+        doc.contactAddressSwapnalaya = safeDecrypt(doc.contactAddressSwapnalaya);
+      }
+    });
   }
 });
 
@@ -112,15 +118,11 @@ siteSettingsSchema.post('find', function (docs) {
  * Post-findOne hook: Decrypt for single document queries
  */
 siteSettingsSchema.post('findOne', function (doc) {
-  try {
-    if (doc) {
-      doc.contactPhone = decrypt(doc.contactPhone);
-      doc.contactEmail = decrypt(doc.contactEmail);
-      doc.contactAddress = decrypt(doc.contactAddress);
-      doc.contactAddressSwapnalaya = decrypt(doc.contactAddressSwapnalaya);
-    }
-  } catch (error) {
-    console.error('Decryption error in post-findOne hook:', error);
+  if (doc) {
+    doc.contactPhone = safeDecrypt(doc.contactPhone);
+    doc.contactEmail = safeDecrypt(doc.contactEmail);
+    doc.contactAddress = safeDecrypt(doc.contactAddress);
+    doc.contactAddressSwapnalaya = safeDecrypt(doc.contactAddressSwapnalaya);
   }
 });
 
@@ -128,15 +130,11 @@ siteSettingsSchema.post('findOne', function (doc) {
  * Post-findOneAndUpdate hook: Decrypt after update operations
  */
 siteSettingsSchema.post('findOneAndUpdate', function (doc) {
-  try {
-    if (doc) {
-      doc.contactPhone = decrypt(doc.contactPhone);
-      doc.contactEmail = decrypt(doc.contactEmail);
-      doc.contactAddress = decrypt(doc.contactAddress);
-      doc.contactAddressSwapnalaya = decrypt(doc.contactAddressSwapnalaya);
-    }
-  } catch (error) {
-    console.error('Decryption error in post-findOneAndUpdate hook:', error);
+  if (doc) {
+    doc.contactPhone = safeDecrypt(doc.contactPhone);
+    doc.contactEmail = safeDecrypt(doc.contactEmail);
+    doc.contactAddress = safeDecrypt(doc.contactAddress);
+    doc.contactAddressSwapnalaya = safeDecrypt(doc.contactAddressSwapnalaya);
   }
 });
 

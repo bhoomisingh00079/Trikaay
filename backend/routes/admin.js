@@ -509,7 +509,7 @@ router.patch(
   '/site-settings',
   [
     body('contactPhone').optional().trim(),
-    body('contactEmail').optional().trim().toLowerCase(),
+    body('contactEmail').optional({ checkFalsy: true }).isEmail().trim(),
     body('contactAddress').optional().trim(),
     body('contactAddressSwapnalaya').optional().trim(),
     body('socialLinks').optional().isObject(),
