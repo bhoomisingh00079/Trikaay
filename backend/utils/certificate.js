@@ -44,15 +44,25 @@ function saveLastCertificateId(id) {
     }
 }
 
+let certIdQueue = Promise.resolve();
+
 /**
  * Generate the next certificate ID in format CERT-XXXX
- * @returns {string} - Next certificate ID
+ * @returns {Promise<string>} - Next certificate ID
  */
-function generateCertificateId() {
-    const lastId = getLastCertificateId();
-    const nextId = lastId + 1;
-    saveLastCertificateId(nextId);
-    return `CERT-${String(nextId).padStart(4, '0')}`;
+async function generateCertificateId() {
+    const prev = certIdQueue;
+    let release;
+    certIdQueue = new Promise(resolve => { release = resolve; });
+    await prev;
+    try {
+        const lastId = getLastCertificateId();
+        const nextId = lastId + 1;
+        saveLastCertificateId(nextId);
+        return `CERT-${String(nextId).padStart(4, '0')}`;
+    } finally {
+        release();
+    }
 }
 
 /**

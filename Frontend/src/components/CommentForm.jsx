@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ValidationRules, validateForm, sanitizeInput } from '../utils/validation';
 
 export default function CommentForm() {
-  const API_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
   const [formData, setFormData] = useState({
     name: '',
     text: '',
@@ -104,6 +104,13 @@ export default function CommentForm() {
       <h2 className="mb-4 text-2xl font-bold text-gray-900">Share Your Feedback</h2>
       
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Success Message */}
+        {successMessage && (
+          <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-green-700 text-sm">
+            {successMessage}
+          </div>
+        )}
+
         {/* Error Message */}
         {errorMessage && (
           <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
@@ -175,30 +182,6 @@ export default function CommentForm() {
           type="submit"
           disabled={isLoading}
           className="w-full rounded-lg bg-blue-600 px-4 py-2 text-white font-medium transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? 'Submitting...' : 'Submit Comment'}
-        </button>
-      </form>
-
-        {/* Success Message */}
-        {successMessage && (
-          <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-green-700">
-            {successMessage}
-          </div>
-        )}
-
-        {/* Error Message */}
-        {errorMessage && (
-          <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-red-700">
-            {errorMessage}
-          </div>
-        )}
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full rounded-lg bg-gradient-to-r from-[#6b3fa0] to-[#9b59b6] px-6 py-2 text-sm font-medium text-white transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? 'Submitting...' : 'Submit Comment'}
         </button>

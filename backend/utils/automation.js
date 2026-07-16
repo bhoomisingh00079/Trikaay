@@ -136,7 +136,7 @@ async function claimRow(spreadsheetId, rowNumber, sheetTab) {
   // "Processing" on the next read and exit.
   let certId = existingCertId;
   if (!certId) {
-    certId = certificate.generateCertificateId();
+    certId = await certificate.generateCertificateId();
     await googleSheets.updateCell(spreadsheetId, rowNumber, 7, certId, sheetTab);
     logStage(STAGE.SHEET_UPDATED, `row=${rowNumber} col=H certId=${certId}`);
   }

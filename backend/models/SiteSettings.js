@@ -100,15 +100,17 @@ function safeDecrypt(value) {
 /**
  * Post-find hook: Decrypt sensitive contact fields after retrieval
  * Applies to all query methods: find(), findOne(), findById(), etc.
+ * Uses _doc directly to avoid marking fields as modified, preventing
+ * unnecessary re-encryption on subsequent save().
  */
 siteSettingsSchema.post('find', function (docs) {
   if (Array.isArray(docs)) {
     docs.forEach((doc) => {
       if (doc) {
-        doc.contactPhone = safeDecrypt(doc.contactPhone);
-        doc.contactEmail = safeDecrypt(doc.contactEmail);
-        doc.contactAddress = safeDecrypt(doc.contactAddress);
-        doc.contactAddressSwapnalaya = safeDecrypt(doc.contactAddressSwapnalaya);
+        doc._doc.contactPhone = safeDecrypt(doc._doc.contactPhone);
+        doc._doc.contactEmail = safeDecrypt(doc._doc.contactEmail);
+        doc._doc.contactAddress = safeDecrypt(doc._doc.contactAddress);
+        doc._doc.contactAddressSwapnalaya = safeDecrypt(doc._doc.contactAddressSwapnalaya);
       }
     });
   }
@@ -119,10 +121,10 @@ siteSettingsSchema.post('find', function (docs) {
  */
 siteSettingsSchema.post('findOne', function (doc) {
   if (doc) {
-    doc.contactPhone = safeDecrypt(doc.contactPhone);
-    doc.contactEmail = safeDecrypt(doc.contactEmail);
-    doc.contactAddress = safeDecrypt(doc.contactAddress);
-    doc.contactAddressSwapnalaya = safeDecrypt(doc.contactAddressSwapnalaya);
+    doc._doc.contactPhone = safeDecrypt(doc._doc.contactPhone);
+    doc._doc.contactEmail = safeDecrypt(doc._doc.contactEmail);
+    doc._doc.contactAddress = safeDecrypt(doc._doc.contactAddress);
+    doc._doc.contactAddressSwapnalaya = safeDecrypt(doc._doc.contactAddressSwapnalaya);
   }
 });
 
@@ -131,10 +133,10 @@ siteSettingsSchema.post('findOne', function (doc) {
  */
 siteSettingsSchema.post('findOneAndUpdate', function (doc) {
   if (doc) {
-    doc.contactPhone = safeDecrypt(doc.contactPhone);
-    doc.contactEmail = safeDecrypt(doc.contactEmail);
-    doc.contactAddress = safeDecrypt(doc.contactAddress);
-    doc.contactAddressSwapnalaya = safeDecrypt(doc.contactAddressSwapnalaya);
+    doc._doc.contactPhone = safeDecrypt(doc._doc.contactPhone);
+    doc._doc.contactEmail = safeDecrypt(doc._doc.contactEmail);
+    doc._doc.contactAddress = safeDecrypt(doc._doc.contactAddress);
+    doc._doc.contactAddressSwapnalaya = safeDecrypt(doc._doc.contactAddressSwapnalaya);
   }
 });
 

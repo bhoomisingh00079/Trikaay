@@ -3,14 +3,14 @@
  * Sets appropriate cache headers for different response types
  */
 
-export function cacheControl(maxAge = 3600) {
+function cacheControl(maxAge = 3600) {
   return (req, res, next) => {
     res.set('Cache-Control', `public, max-age=${maxAge}`);
     next();
   };
 }
 
-export function noCacheControl(req, res, next) {
+function noCacheControl(req, res, next) {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
@@ -25,10 +25,12 @@ export function noCacheControl(req, res, next) {
  * - Admin data: no cache - always fresh
  * - Auth endpoints: no cache - security
  */
-export const CACHE_DURATIONS = {
+const CACHE_DURATIONS = {
   STATIC: 31536000,      // 1 year
   MEDIA: 2592000,        // 1 month (images/PDFs from MongoDB)
   API_GENERAL: 300,      // 5 minutes (projects, team, etc.)
   ADMIN: 0,              // No cache
   AUTH: 0,               // No cache
 };
+
+module.exports = { cacheControl, noCacheControl, CACHE_DURATIONS };

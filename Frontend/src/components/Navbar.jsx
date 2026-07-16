@@ -1,6 +1,6 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FaLock, FaBars, FaTimes } from 'react-icons/fa';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import LoginModal from "./LoginModal";
 import { mediaFileUrl } from "../utils/api";
@@ -17,9 +17,12 @@ export default function Navbar() {
     setIsScrolled(window.scrollY > 0);
   };
 
-  if (typeof window !== "undefined") {
-    window.addEventListener("scroll", handleScroll, { passive: true });
-  }
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.addEventListener("scroll", handleScroll, { passive: true });
+      return () => window.removeEventListener("scroll", handleScroll);
+    }
+  }, []);
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
