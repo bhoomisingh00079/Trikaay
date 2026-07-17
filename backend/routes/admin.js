@@ -14,6 +14,7 @@ const { sheets } = require('../config/googleAuth');
 const { initializeGoogleAuth } = require('../utils/googleSheets');
 const { initializeEmailService } = require('../utils/emailService');
 const { processVolunteerCertificate } = require('../utils/automation');
+const { noCacheControl } = require('../middleware/cacheControl');
 
 const router = express.Router();
 let automationServicesReady = false;
@@ -249,7 +250,7 @@ router.get('/stats', async (req, res, next) => {
  * GET /api/admin/team
  * Get all team members (including hidden)
  */
-router.get('/team', async (req, res, next) => {
+router.get('/team', noCacheControl, async (req, res, next) => {
   try {
     const team = await TeamMember.find().sort({ order: 1 });
     res.json(team);
@@ -348,7 +349,7 @@ router.delete('/team/:id', [param('id').isMongoId()], async (req, res, next) => 
  * GET /api/admin/projects
  * Get all projects (including hidden)
  */
-router.get('/projects', async (req, res, next) => {
+router.get('/projects', noCacheControl, async (req, res, next) => {
   try {
     await ensureProjectNumbers();
     const projects = await Project.find().sort({ projectNumber: 1, order: 1 });
@@ -492,7 +493,7 @@ router.delete('/projects/:id', [param('id').isMongoId()], async (req, res, next)
  * GET /api/admin/site-settings
  * Get or create singleton site settings
  */
-router.get('/site-settings', async (req, res, next) => {
+router.get('/site-settings', noCacheControl, async (req, res, next) => {
   try {
     const settings = await SiteSettings.getSingleton();
     res.json(settings);

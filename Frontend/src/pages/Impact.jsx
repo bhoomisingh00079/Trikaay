@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import Navbar from "../components/Navbar";
 import SiteFooter from "../components/SiteFooter";
 import { apiUrl, mediaFileUrl } from "../utils/api";
+import { useSyncListener, SYNC_EVENTS } from "../utils/sync";
 
 const HARD_CODED_REPORT = {
   originalName: "TCCA Activity report Document (A4).pdf",
@@ -15,32 +16,41 @@ export default function Impact() {
   const [documents, setDocuments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState("");
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      try {
-        const response = await fetch(apiUrl('/api/media/docs'));
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        const data = await response.json();
-        if (Array.isArray(data) && data.length > 0) {
-          setDocuments(data);
-          setFetchError("");
-        } else {
-          setDocuments([]);
-          setFetchError("No documents found in media API.");
-        }
-      } catch (error) {
-        console.error('Error fetching documents:', error);
-        setDocuments([]);
-        setFetchError("Could not load reports from API.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchingDocs = useRef(false);
 
-    fetchDocuments();
+  const fetchDocuments = useCallback(async () => {
+    if (fetchingDocs.current) return;
+    fetchingDocs.current = true;
+    try {
+      const response = await fetch(apiUrl('/api/media/docs'));
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const data = await response.json();
+      if (Array.isArray(data) && data.length > 0) {
+        setDocuments(data);
+        setFetchError("");
+      } else {
+        setDocuments([]);
+        setFetchError("No documents found in media API.");
+      }
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      setDocuments([]);
+      setFetchError("Could not load reports from API.");
+    } finally {
+      setIsLoading(false);
+      fetchingDocs.current = false;
+    }
   }, []);
+
+  useEffect(() => {
+    fetchDocuments();
+  }, [fetchDocuments]);
+
+  useSyncListener([SYNC_EVENTS.DOCUMENTS_UPDATED], () => {
+    fetchDocuments();
+  });
 
   const docsWithHardcoded = useMemo(() => {
     const exists = documents.some((doc) => doc.originalName === HARD_CODED_REPORT.originalName);

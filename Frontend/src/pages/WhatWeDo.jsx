@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Navbar from "../components/Navbar";
 import SiteFooter from "../components/SiteFooter";
 import ApprovedComments from "../components/ApprovedComments";
 import { apiUrl, normalizeAssetUrl } from "../utils/api";
+import { useSyncListener, SYNC_EVENTS } from "../utils/sync";
 
 export default function WhatWeDo() {
   const [projects, setProjects] = useState([]);
@@ -10,53 +11,67 @@ export default function WhatWeDo() {
   const [expandedIds, setExpandedIds] = useState([]);
   const [commentInputs, setCommentInputs] = useState({});
   const [comments, setComments] = useState({});
+  const fetchingProjects = useRef(false);
+  const fetchingComments = useRef(false);
+
+  const fetchProjects = useCallback(async () => {
+    if (fetchingProjects.current) return;
+    fetchingProjects.current = true;
+    try {
+      const response = await fetch(apiUrl('/api/projects'));
+      const data = await response.json();
+      if (response.ok) {
+        setProjects(Array.isArray(data) ? data : []);
+      } else {
+        setProjects([]);
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      setProjects([]);
+    } finally {
+      setIsLoadingProjects(false);
+      fetchingProjects.current = false;
+    }
+  }, []);
+
+  const fetchComments = useCallback(async () => {
+    if (fetchingComments.current) return;
+    fetchingComments.current = true;
+    try {
+      const response = await fetch(apiUrl('/api/comments/approved'));
+      const data = await response.json();
+      if (response.ok) {
+        const commentsByProject = {};
+        (data.data || []).forEach(comment => {
+          if (!commentsByProject[comment.projectId]) {
+            commentsByProject[comment.projectId] = [];
+          }
+          commentsByProject[comment.projectId].push(comment);
+        });
+        setComments(commentsByProject);
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    } finally {
+      fetchingComments.current = false;
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const response = await fetch(apiUrl('/api/projects'));
-        const data = await response.json();
-        if (response.ok) {
-          setProjects(Array.isArray(data) ? data : []);
-        } else {
-          setProjects([]);
-        }
-      } catch (error) {
-        console.error('Error fetching projects:', error);
-        setProjects([]);
-      } finally {
-        setIsLoadingProjects(false);
-      }
-    };
-
-    const fetchComments = async () => {
-      try {
-        const response = await fetch(apiUrl('/api/comments/approved'));
-        const data = await response.json();
-        if (response.ok) {
-          // Organize comments by projectId
-          const commentsByProject = {};
-          (data.data || []).forEach(comment => {
-            if (!commentsByProject[comment.projectId]) {
-              commentsByProject[comment.projectId] = [];
-            }
-            commentsByProject[comment.projectId].push(comment);
-          });
-          setComments(commentsByProject);
-        }
-      } catch (error) {
-        console.error('Error fetching comments:', error);
-      }
-    };
-
     fetchProjects();
     fetchComments();
+  }, [fetchProjects, fetchComments]);
 
-    // Poll every 3 seconds
-    const intervalId = setInterval(fetchComments, 3000);
-
-    return () => clearInterval(intervalId);
-  }, []);
+  useSyncListener(
+    [SYNC_EVENTS.PROJECT_CREATED, SYNC_EVENTS.PROJECT_UPDATED, SYNC_EVENTS.PROJECT_DELETED, SYNC_EVENTS.COMMENTS_UPDATED],
+    (event) => {
+      if (event.type.startsWith('project-')) {
+        fetchProjects();
+      } else if (event.type === 'comments-updated') {
+        fetchComments();
+      }
+    }
+  );
 
   const toggleProject = (projectId) => {
     setExpandedIds(prev =>

@@ -11,7 +11,7 @@ const TeamMember = require('../models/TeamMember');
 const Project = require('../models/Project');
 const SiteSettings = require('../models/SiteSettings');
 const { initializeGoogleAuth, appendVolunteerToSheet } = require('../utils/googleSheets');
-const { cacheControl, CACHE_DURATIONS } = require('../middleware/cacheControl');
+const { cacheControl, noCacheControl, CACHE_DURATIONS } = require('../middleware/cacheControl');
 
 const router = express.Router();
 let isGoogleAuthInitialized = false;
@@ -31,9 +31,9 @@ router.get('/team', cacheControl(CACHE_DURATIONS.API_GENERAL), async (req, res, 
 
 /**
  * GET /api/projects
- * Get all visible projects (cached 5 minutes)
+ * Get all visible projects
  */
-router.get('/projects', cacheControl(CACHE_DURATIONS.API_GENERAL), async (req, res, next) => {
+router.get('/projects', noCacheControl, async (req, res, next) => {
   try {
     const projects = await Project.find({ isVisible: true }).sort({ projectNumber: 1, order: 1 });
     res.json(projects);
@@ -46,7 +46,7 @@ router.get('/projects', cacheControl(CACHE_DURATIONS.API_GENERAL), async (req, r
  * GET /api/site-settings
  * Get public site settings (contact + social links)
  */
-router.get('/site-settings', cacheControl(CACHE_DURATIONS.API_GENERAL), async (req, res, next) => {
+router.get('/site-settings', noCacheControl, async (req, res, next) => {
   try {
     const settings = await SiteSettings.getSingleton();
 

@@ -21,6 +21,7 @@ import {
   uploadMedia,
 } from "../utils/api";
 import { mediaFileUrl, normalizeAssetUrl } from "../utils/api";
+import { broadcast, useSyncListener, SYNC_EVENTS } from "../utils/sync";
 
 const FALLBACK_ADDRESS = "Swapnalaya children's home for girls, Old Panvel, Navi Mumbai - 410206";
 
@@ -85,6 +86,7 @@ export default function AdminDashboard() {
   const [lastSyncedAt, setLastSyncedAt] = useState(null);
   const [isManualSyncing, setIsManualSyncing] = useState(false);
   const isSyncingRef = useRef(false);
+  const [projectToggling, setProjectToggling] = useState({}); // State to track toggling projects
 
   const navItems = [
     { id: "cards", label: "Projects" },
@@ -101,31 +103,36 @@ export default function AdminDashboard() {
     setTeamMembers(teamRes.data || []);
   }
 
+
   async function refreshSiteSettings() {
-    const settingsRes = await getSiteSettings();
-    const data = settingsRes.data || {};
-    const hydrated = {
-      ...data,
-      contactAddress: data.contactAddress || FALLBACK_ADDRESS,
-      socialLinks: data.socialLinks || {},
-    };
+    try {
+      const settingsRes = await getSiteSettings();
+      const data = settingsRes.data || {};
+      const hydrated = {
+        ...data,
+        contactAddress: data.contactAddress || FALLBACK_ADDRESS,
+        socialLinks: data.socialLinks || {},
+      };
 
-    setSiteSettings(hydrated);
-    setContactForm({
-      contactPhone: hydrated.contactPhone || "",
-      contactEmail: hydrated.contactEmail || "",
-      contactAddress: hydrated.contactAddress || FALLBACK_ADDRESS,
-      contactAddressSwapnalaya: hydrated.contactAddressSwapnalaya || "",
-    });
+      setSiteSettings(hydrated);
+      setContactForm({
+        contactPhone: hydrated.contactPhone ?? "",
+        contactEmail: hydrated.contactEmail ?? "",
+        contactAddress: hydrated.contactAddress ?? FALLBACK_ADDRESS,
+        contactAddressSwapnalaya: hydrated.contactAddressSwapnalaya ?? "",
+      });
 
-    setSocialForm({
-      facebook: hydrated.socialLinks?.facebook || "",
-      instagram: hydrated.socialLinks?.instagram || "",
-      linkedin: hydrated.socialLinks?.linkedin || "",
-      twitter: hydrated.socialLinks?.twitter || "",
-      youtube: hydrated.socialLinks?.youtube || "",
-      whatsapp: hydrated.socialLinks?.whatsapp || "",
-    });
+      setSocialForm({
+        facebook: hydrated.socialLinks?.facebook ?? "",
+        instagram: hydrated.socialLinks?.instagram ?? "",
+        linkedin: hydrated.socialLinks?.linkedin ?? "",
+        twitter: hydrated.socialLinks?.twitter ?? "",
+        youtube: hydrated.socialLinks?.youtube ?? "",
+        whatsapp: hydrated.socialLinks?.whatsapp ?? "",
+      });
+    } catch (err) {
+      console.error("Failed to refresh site settings:", err);
+    }
   }
 
   async function refreshSheets() {
@@ -254,35 +261,27 @@ export default function AdminDashboard() {
     bootstrap();
   }, []);
 
-  useEffect(() => {
-    let intervalMs = 90000;
-
-    if (activeSection === "sheets") {
-      intervalMs = 20000;
-    } else if (activeSection === "mongo" || activeSection === "documents") {
-      intervalMs = 30000;
-    } else if (activeSection === "cards") {
-      intervalMs = 45000;
+  useSyncListener(Object.values(SYNC_EVENTS), (event) => {
+    const { type } = event;
+    if (type.startsWith('project-') || type === 'team-updated') {
+      refreshProjectsAndTeam();
+    } else if (type === 'settings-updated') {
+      refreshSiteSettings();
+    } else if (type === 'documents-updated') {
+      refreshDocs();
+    } else if (type === 'volunteers-updated' || type === 'comments-updated') {
+      refreshSheets();
     }
+  });
 
+  useEffect(() => {
+    if (activeSection !== 'sheets') return;
     const intervalId = setInterval(() => {
       if (!document.hidden) {
-        syncDashboardLiveData();
+        refreshSheets();
       }
-    }, intervalMs);
-
-    const onVisibilityChange = () => {
-      if (!document.hidden) {
-        syncDashboardLiveData();
-      }
-    };
-
-    document.addEventListener("visibilitychange", onVisibilityChange);
-
-    return () => {
-      clearInterval(intervalId);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-    };
+    }, 60000);
+    return () => clearInterval(intervalId);
   }, [activeSection]);
 
   function handleNavClick(sectionId) {
@@ -362,6 +361,7 @@ export default function AdminDashboard() {
 
     try {
       setProjectBusy(true);
+      const isNew = !editingProjectId;
       if (editingProjectId) {
         await updateProject(editingProjectId, payload);
       } else {
@@ -369,10 +369,38 @@ export default function AdminDashboard() {
       }
       await refreshProjectsAndTeam();
       resetProjectForm();
+      broadcast(isNew ? SYNC_EVENTS.PROJECT_CREATED : SYNC_EVENTS.PROJECT_UPDATED);
     } catch (err) {
       alert(err?.response?.data?.error || "Unable to save project.");
     } finally {
       setProjectBusy(false);
+    }
+  }
+
+  async function toggleProjectVisibility(project) {
+    const desiredVisibility = !project.isVisible;
+    // Optimistically update UI
+    setProjects((prev) =>
+      prev.map((p) => (p._id === project._id ? { ...p, isVisible: desiredVisibility } : p))
+    );
+    try {
+      setProjectToggling((prev) => ({ ...prev, [project._id]: true }));
+      const response = await updateProject(project._id, { isVisible: desiredVisibility });
+      const updatedProject = response.data;
+      if (updatedProject) {
+        setProjects((prev) =>
+          prev.map((p) => (p._id === updatedProject._id ? updatedProject : p))
+        );
+      }
+      broadcast(SYNC_EVENTS.PROJECT_UPDATED);
+    } catch (err) {
+      // Revert on failure
+      setProjects((prev) =>
+        prev.map((p) => (p._id === project._id ? { ...p, isVisible: project.isVisible } : p))
+      );
+      alert(err?.response?.data?.error || "Unable to update visibility.");
+    } finally {
+      setProjectToggling((prev) => ({ ...prev, [project._id]: false }));
     }
   }
 
@@ -382,17 +410,9 @@ export default function AdminDashboard() {
       await deleteProject(id);
       await refreshProjectsAndTeam();
       if (editingProjectId === id) resetProjectForm();
+      broadcast(SYNC_EVENTS.PROJECT_DELETED);
     } catch (err) {
       alert(err?.response?.data?.error || "Unable to delete project.");
-    }
-  }
-
-  async function toggleProjectVisibility(project) {
-    try {
-      await updateProject(project._id, { isVisible: !project.isVisible });
-      await refreshProjectsAndTeam();
-    } catch (err) {
-      alert(err?.response?.data?.error || "Unable to update visibility.");
     }
   }
 
@@ -400,14 +420,35 @@ export default function AdminDashboard() {
     e.preventDefault();
     try {
       setSettingsBusy(true);
-      await updateSiteSettings({
+      const response = await updateSiteSettings({
         contactPhone: contactForm.contactPhone,
         contactEmail: contactForm.contactEmail,
         contactAddress: contactForm.contactAddress,
         contactAddressSwapnalaya: contactForm.contactAddressSwapnalaya,
       });
-      await refreshSiteSettings();
+      const data = response.data || {};
+      const hydrated = {
+        ...data,
+        contactAddress: data.contactAddress || FALLBACK_ADDRESS,
+        socialLinks: data.socialLinks || {},
+      };
+      setSiteSettings(hydrated);
+      setContactForm({
+        contactPhone: hydrated.contactPhone ?? "",
+        contactEmail: hydrated.contactEmail ?? "",
+        contactAddress: hydrated.contactAddress ?? FALLBACK_ADDRESS,
+        contactAddressSwapnalaya: hydrated.contactAddressSwapnalaya ?? "",
+      });
+      setSocialForm({
+        facebook: hydrated.socialLinks?.facebook ?? "",
+        instagram: hydrated.socialLinks?.instagram ?? "",
+        linkedin: hydrated.socialLinks?.linkedin ?? "",
+        twitter: hydrated.socialLinks?.twitter ?? "",
+        youtube: hydrated.socialLinks?.youtube ?? "",
+        whatsapp: hydrated.socialLinks?.whatsapp ?? "",
+      });
       alert("Contact settings updated.");
+      broadcast(SYNC_EVENTS.SETTINGS_UPDATED);
     } catch (err) {
       alert(err?.response?.data?.error || "Unable to save contact settings.");
     } finally {
@@ -419,9 +460,30 @@ export default function AdminDashboard() {
     e.preventDefault();
     try {
       setSettingsBusy(true);
-      await updateSiteSettings({ socialLinks: socialForm });
-      await refreshSiteSettings();
+      const response = await updateSiteSettings({ socialLinks: socialForm });
+      const data = response.data || {};
+      const hydrated = {
+        ...data,
+        contactAddress: data.contactAddress || FALLBACK_ADDRESS,
+        socialLinks: data.socialLinks || {},
+      };
+      setSiteSettings(hydrated);
+      setContactForm({
+        contactPhone: hydrated.contactPhone ?? "",
+        contactEmail: hydrated.contactEmail ?? "",
+        contactAddress: hydrated.contactAddress ?? FALLBACK_ADDRESS,
+        contactAddressSwapnalaya: hydrated.contactAddressSwapnalaya ?? "",
+      });
+      setSocialForm({
+        facebook: hydrated.socialLinks?.facebook ?? "",
+        instagram: hydrated.socialLinks?.instagram ?? "",
+        linkedin: hydrated.socialLinks?.linkedin ?? "",
+        twitter: hydrated.socialLinks?.twitter ?? "",
+        youtube: hydrated.socialLinks?.youtube ?? "",
+        whatsapp: hydrated.socialLinks?.whatsapp ?? "",
+      });
       alert("Social links updated.");
+      broadcast(SYNC_EVENTS.SETTINGS_UPDATED);
     } catch (err) {
       alert(err?.response?.data?.error || "Unable to save social links.");
     } finally {
@@ -442,6 +504,7 @@ export default function AdminDashboard() {
 
     try {
       await approveVolunteer(rowNumber);
+      broadcast(SYNC_EVENTS.VOLUNTEERS_UPDATED);
     } catch (err) {
       setVolunteers(previous);
       alert(err?.response?.data?.error || "Approval failed.");
@@ -461,6 +524,7 @@ export default function AdminDashboard() {
 
     try {
       await approveComment(rowNumber);
+      broadcast(SYNC_EVENTS.COMMENTS_UPDATED);
     } catch (err) {
       setSheetComments(previous);
       alert(err?.response?.data?.error || "Comment approval failed.");
@@ -481,6 +545,7 @@ export default function AdminDashboard() {
       await uploadMedia(form);
       setDocForm({ title: "", category: "general", file: null });
       await refreshDocs();
+      broadcast(SYNC_EVENTS.DOCUMENTS_UPDATED);
     } catch (err) {
       alert(err?.response?.data?.error || "Upload failed.");
     } finally {
@@ -493,6 +558,7 @@ export default function AdminDashboard() {
     try {
       await deleteMedia(id);
       await refreshDocs();
+      broadcast(SYNC_EVENTS.DOCUMENTS_UPDATED);
     } catch (err) {
       alert(err?.response?.data?.error || "Delete failed.");
     }
@@ -632,7 +698,13 @@ export default function AdminDashboard() {
                     <p className="mt-2 text-xs text-gray-500">Project No: {project.projectNumber || "-"} | Visible: {project.isVisible ? "Yes" : "No"}</p>
                     <div className="mt-3 flex gap-2">
                       <button type="button" onClick={() => { setEditingProjectId(project._id); setProjectImageFile(null); setProjectForm(mapProjectToForm(project)); }} className="rounded bg-amber-500 px-3 py-1 text-sm text-white hover:bg-amber-600">Edit</button>
-                      <button type="button" onClick={() => toggleProjectVisibility(project)} className="rounded bg-indigo-500 px-3 py-1 text-sm text-white hover:bg-indigo-600">Toggle</button>
+                      <button 
+                        type="button" 
+                        onClick={() => toggleProjectVisibility(project)} 
+                        disabled={projectToggling[project._id]} 
+                        className={`rounded px-3 py-1 text-sm text-white transition ${projectToggling[project._id] ? 'bg-gray-400' : (project.isVisible ? 'bg-orange-500 hover:bg-orange-600' : 'bg-indigo-500 hover:bg-indigo-600')}`}>
+                        {projectToggling[project._id] ? 'Toggling...' : (project.isVisible ? 'Hide' : 'Show')}
+                      </button>
                       <button type="button" onClick={() => removeProject(project._id)} className="rounded bg-rose-600 px-3 py-1 text-sm text-white hover:bg-rose-700">Delete</button>
                     </div>
                   </article>

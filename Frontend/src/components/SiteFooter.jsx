@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { SiFacebook, SiInstagram, SiX, SiYoutube, SiWhatsapp } from "react-icons/si";
 import { FaLinkedin } from "react-icons/fa";
 import { apiUrl, getPublicSiteSettings, mediaFileUrl } from "../utils/api";
+import { useSyncListener, SYNC_EVENTS } from "../utils/sync";
 
 export default function SiteFooter({ showVolunteer = false }) {
   const [subscribeEmail, setSubscribeEmail] = useState('');
@@ -15,29 +16,29 @@ export default function SiteFooter({ showVolunteer = false }) {
     youtube: '',
     whatsapp: '',
   });
+  const fetchingSettings = useRef(false);
+
+  const loadSiteSettings = useCallback(async () => {
+    if (fetchingSettings.current) return;
+    fetchingSettings.current = true;
+    try {
+      const response = await getPublicSiteSettings();
+      const links = response?.data?.socialLinks || {};
+      setSocialLinks((prev) => ({ ...prev, ...links }));
+    } catch (error) {
+      // Keep placeholders if public settings are unavailable.
+    } finally {
+      fetchingSettings.current = false;
+    }
+  }, []);
 
   useEffect(() => {
-    let mounted = true;
-
-    async function loadSiteSettings() {
-      try {
-        const response = await getPublicSiteSettings();
-        const links = response?.data?.socialLinks || {};
-
-        if (mounted) {
-          setSocialLinks((prev) => ({ ...prev, ...links }));
-        }
-      } catch (error) {
-        // Keep placeholders if public settings are unavailable.
-      }
-    }
-
     loadSiteSettings();
+  }, [loadSiteSettings]);
 
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  useSyncListener([SYNC_EVENTS.SETTINGS_UPDATED], () => {
+    loadSiteSettings();
+  });
 
   const socialItems = useMemo(
     () => [

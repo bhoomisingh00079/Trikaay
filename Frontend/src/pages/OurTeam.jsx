@@ -1,28 +1,37 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Navbar from "../components/Navbar";
 import SiteFooter from "../components/SiteFooter";
+import { useSyncListener, SYNC_EVENTS } from "../utils/sync";
 
 export default function OurTeam() {
   const [teamMembers, setTeamMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+  const fetchingTeam = useRef(false);
+
+  const fetchTeam = useCallback(async () => {
+    if (fetchingTeam.current) return;
+    fetchingTeam.current = true;
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/team`);
+      const data = await response.json();
+      setTeamMembers(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching team:', error);
+      setTeamMembers([]);
+    } finally {
+      setIsLoading(false);
+      fetchingTeam.current = false;
+    }
+  }, [API_BASE_URL]);
 
   useEffect(() => {
-    const fetchTeam = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/team`);
-        const data = await response.json();
-        setTeamMembers(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error('Error fetching team:', error);
-        setTeamMembers([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchTeam();
-  }, [API_BASE_URL]);
+  }, [fetchTeam]);
+
+  useSyncListener([SYNC_EVENTS.TEAM_UPDATED], () => {
+    fetchTeam();
+  });
 
   const firstRow = teamMembers.slice(0, 5);
   const secondRow = teamMembers.slice(5);

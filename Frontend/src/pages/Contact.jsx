@@ -1,10 +1,11 @@
 import Navbar from "../components/Navbar";
 import SiteFooter from "../components/SiteFooter";
 import { FaPhone, FaEnvelope } from "react-icons/fa6";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { getPublicSiteSettings } from "../utils/api";
+import { useSyncListener, SYNC_EVENTS } from "../utils/sync";
 
 // Fix for default markers in react-leaflet
 import L from 'leaflet';
@@ -30,25 +31,35 @@ export default function Contact() {
     zoom: 15,
   };
 
-  useEffect(() => {
-    async function loadSiteSettings() {
-      try {
-        const response = await getPublicSiteSettings();
-        const settings = response.data || {};
-        setContactInfo((prev) => ({
-          ...prev,
-          phone: settings.contactPhone || prev.phone,
-          email: settings.contactEmail || prev.email,
-          addressMain: settings.contactAddress || prev.addressMain || swapnalayaLocation.address,
-          addressSwapnalaya: settings.contactAddressSwapnalaya || prev.addressSwapnalaya || swapnalayaLocation.address,
-        }));
-      } catch (error) {
-        // Keep existing fallback values when settings are unavailable.
-      }
-    }
+  const fetchingSettings = useRef(false);
 
-    loadSiteSettings();
+  const loadSiteSettings = useCallback(async () => {
+    if (fetchingSettings.current) return;
+    fetchingSettings.current = true;
+    try {
+      const response = await getPublicSiteSettings();
+      const settings = response.data || {};
+      setContactInfo((prev) => ({
+        ...prev,
+        phone: settings.contactPhone || prev.phone,
+        email: settings.contactEmail || prev.email,
+        addressMain: settings.contactAddress || prev.addressMain || swapnalayaLocation.address,
+        addressSwapnalaya: settings.contactAddressSwapnalaya || prev.addressSwapnalaya || swapnalayaLocation.address,
+      }));
+    } catch (error) {
+      // Keep existing fallback values when settings are unavailable.
+    } finally {
+      fetchingSettings.current = false;
+    }
   }, []);
+
+  useEffect(() => {
+    loadSiteSettings();
+  }, [loadSiteSettings]);
+
+  useSyncListener([SYNC_EVENTS.SETTINGS_UPDATED], () => {
+    loadSiteSettings();
+  });
 
   return (
     <>
